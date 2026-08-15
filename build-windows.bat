@@ -102,6 +102,12 @@ if not exist "%TARGET_DIR%\%JAR_NAME%" (
 )
 echo [INFO] Usando JAR: %JAR_NAME%
 
+REM Crear directorio de entrada aislado para jpackage
+set "JPACKAGE_INPUT=%TARGET_DIR%\jpackage-input"
+if exist "%JPACKAGE_INPUT%" rmdir /s /q "%JPACKAGE_INPUT%"
+mkdir "%JPACKAGE_INPUT%"
+copy "%TARGET_DIR%\%JAR_NAME%" "%JPACKAGE_INPUT%\" >nul
+
 REM Verificar si existe el icono
 set "ICON_OPTION="
 if exist "%PROJECT_DIR%\native\icons\app.ico" (
@@ -111,14 +117,21 @@ if exist "%PROJECT_DIR%\native\icons\app.ico" (
     echo [WARN] No se encontro icono, se usara el predeterminado
 )
 
+REM Obtener module path de JavaFX desde Maven
+echo [BUILD] Detectando modulos JavaFX...
+set "JAVAFX_MODULES=javafx.controls,javafx.web,javafx.fxml"
+for /f "delims=" %%i in ('mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout 2^>nul ^| findstr /i "javafx"') do set "JAVAFX_MODULE_PATH=%%i"
+
 jpackage ^
     --type app-image ^
     --name "GestorTareasAcademicas" ^
     --dest "%TARGET_DIR%\installers" ^
-    --input "%TARGET_DIR%" ^
+    --input "%JPACKAGE_INPUT%" ^
     --main-class com.academic.gestor.NativeLauncher ^
     --main-jar "%JAR_NAME%" ^
     %ICON_OPTION% ^
+    --java-options "--add-modules=%JAVAFX_MODULES%" ^
+    --java-options "--module-path=%JAVAFX_MODULE_PATH%" ^
     --java-options "-Djava.library.path=%APPDIR%\..\runtime\lib" ^
     --java-options "-Dspring.profiles.active=native" ^
     --java-options "-Xmx512m" ^
@@ -128,6 +141,9 @@ jpackage ^
     --win-menu ^
     --win-menu-group "Academic" ^
     --win-shortcut
+
+REM Limpiar directorio de entrada aislado
+if exist "%JPACKAGE_INPUT%" rmdir /s /q "%JPACKAGE_INPUT%"
 
 if errorlevel 1 (
     echo [ERROR] Error al crear la app image

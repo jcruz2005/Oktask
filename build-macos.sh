@@ -110,6 +110,12 @@ JAR_BASENAME=$(basename "$JAR_NAME")
 
 echo "[INFO] Usando JAR: $JAR_BASENAME"
 
+# Crear directorio de entrada aislado para jpackage
+JPACKAGE_INPUT="$TARGET_DIR/jpackage-input"
+rm -rf "$JPACKAGE_INPUT"
+mkdir -p "$JPACKAGE_INPUT"
+cp "$JAR_NAME" "$JPACKAGE_INPUT/"
+
 # Verificar si existe el icono
 ICON_PATH=""
 if [ -f "$PROJECT_DIR/native/icons/app.icns" ]; then
@@ -119,14 +125,29 @@ else
     echo "[WARN] No se encontró icono .icns, se usará el predeterminado"
 fi
 
+# Obtener module path de JavaFX desde Maven
+echo "[BUILD] Detectando módulos JavaFX..."
+JAVAFX_MODULES="javafx.controls,javafx.web,javafx.fxml"
+JAVAFX_MODULE_PATH=$(mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout 2>/dev/null | tr ':' '\n' | grep javafx | tr '\n' ':')
+if [ -z "$JAVAFX_MODULE_PATH" ]; then
+    JAVAFX_MODULE_PATH=$(find ~/.m2/repository/org/openjfx -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" 2>/dev/null | tr '\n' ':')
+fi
+if [ -z "$JAVAFX_MODULE_PATH" ]; then
+    echo "[ERROR] No se encontraron dependencias de JavaFX"
+    exit 1
+fi
+echo "[OK] JavaFX module path detectado"
+
 jpackage \
     --type app-image \
     --name "GestorTareasAcademicas" \
     --dest "$TARGET_DIR/installers" \
-    --input "$TARGET_DIR" \
+    --input "$JPACKAGE_INPUT" \
     --main-class com.academic.gestor.NativeLauncher \
     --main-jar "$JAR_BASENAME" \
     $ICON_PATH \
+    --java-options "--add-modules=$JAVAFX_MODULES" \
+    --java-options "--module-path=$JAVAFX_MODULE_PATH" \
     --java-options "-Djava.library.path=\$APPDIR/../runtime/lib" \
     --java-options "-Dspring.profiles.active=native" \
     --java-options "-Xmx512m" \
@@ -135,6 +156,9 @@ jpackage \
     --description "Gestor de Tareas Académicas con Pomodoro" \
     --mac-package-identifier "com.academic.gestor-tareas" \
     --mac-package-name "Gestor Tareas"
+
+# Limpiar directorio de entrada aislado
+rm -rf "$JPACKAGE_INPUT"
 
 if [ $? -ne 0 ]; then
     echo "[ERROR] Error al crear la app image"
