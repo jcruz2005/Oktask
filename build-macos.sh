@@ -77,6 +77,7 @@ echo ""
 
 # Crear app image con jpackage
 echo "[BUILD] Creando app image para macOS..."
+rm -rf "$TARGET_DIR/installers"
 mkdir -p "$TARGET_DIR/installers"
 
 # Determinar el nombre del JAR compilado

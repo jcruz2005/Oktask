@@ -73,7 +73,8 @@ echo.
 
 REM Crear app image con jpackage
 echo [BUILD] Creando app image para Windows...
-if not exist "%TARGET_DIR%\installers" mkdir "%TARGET_DIR%\installers"
+if exist "%TARGET_DIR%\installers" rmdir /s /q "%TARGET_DIR%\installers"
+mkdir "%TARGET_DIR%\installers"
 
 REM Determinar el nombre del JAR compilado
 set "JAR_NAME="
