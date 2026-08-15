@@ -186,8 +186,55 @@ echo "  BUILD COMPLETADO EXITOSAMENTE"
 echo "=========================================="
 echo "[INFO] App image creada en: $TARGET_DIR/installers/"
 echo "[INFO] Para ejecutar: $TARGET_DIR/installers/GestorTareasAcademicas/bin/GestorTareasAcademicas"
-echo ""
 
-# Mostrar contenido del directorio de instaladores
-echo "[INFO] Contenido del directorio de instaladores:"
-ls -la "$TARGET_DIR/installers/" 2>/dev/null || echo "  (directorio vacío)"
+# Crear acceso directo (.desktop) en el escritorio y en el menú de aplicaciones
+echo ""
+echo "[BUILD] Creando accesos directos..."
+
+APP_BIN="$TARGET_DIR/installers/GestorTareasAcademicas/bin/GestorTareasAcademicas"
+DESKTOP_NAME="GestorTareasAcademicas"
+
+# Buscar icono para el .desktop (preferir PNG)
+ICON_FILE=""
+if [ -f "$PROJECT_DIR/native/icons/app-icon.png" ]; then
+    ICON_FILE="$PROJECT_DIR/native/icons/app-icon.png"
+fi
+
+# Contenido del archivo .desktop
+DESKTOP_CONTENT="[Desktop Entry]
+Name=Gestor de Tareas Académicas
+Comment=Gestor de Tareas Académicas con Pomodoro y Análisis de Horas
+Exec=$APP_BIN
+Icon=$ICON_FILE
+Type=Application
+Categories=Education;Productivity;
+Terminal=false
+StartupNotify=true
+Version=1.0.0
+"
+
+# Crear en el escritorio del usuario
+DESKTOP_DIR="$HOME/Desktop"
+if [ -d "$DESKTOP_DIR" ]; then
+    echo "$DESKTOP_CONTENT" > "$DESKTOP_DIR/$DESKTOP_NAME.desktop"
+    chmod +x "$DESKTOP_DIR/$DESKTOP_NAME.desktop"
+    # En algunas distribuciones, el .desktop necesita ser confiable
+    gio set "$DESKTOP_DIR/$DESKTOP_NAME.desktop" "metadata::trusted" true 2>/dev/null || true
+    echo "[OK] Acceso directo creado en: $DESKTOP_DIR/$DESKTOP_NAME.desktop"
+else
+    echo "[WARN] No se encontró el directorio del escritorio: $DESKTOP_DIR"
+fi
+
+# Crear en el menú de aplicaciones
+MENU_DIR="$HOME/.local/share/applications"
+mkdir -p "$MENU_DIR"
+echo "$DESKTOP_CONTENT" > "$MENU_DIR/$DESKTOP_NAME.desktop"
+echo "[OK] Acceso directo creado en el menú de aplicaciones: $MENU_DIR/$DESKTOP_NAME.desktop"
+
+# Actualizar caché de iconos (opcional)
+update-desktop-database "$MENU_DIR" 2>/dev/null || true
+
+echo ""
+echo "[INFO] Para ejecutar desde el menú: buscar 'Gestor de Tareas Académicas'"
+echo "[INFO] Para ejecutar desde terminal: $APP_BIN"
+echo ""
