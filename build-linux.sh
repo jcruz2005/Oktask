@@ -59,13 +59,43 @@ echo ""
 # Compilar JAR
 echo "[BUILD] Compilando JAR con Maven..."
 cd "$PROJECT_DIR"
-mvn clean package -Dmaven.test.skip=true -q
+
+# Primero generar el fat JAR para obtener dependencias
+mvn clean package -DskipTests -q
 
 if [ $? -ne 0 ]; then
     echo "[ERROR] Error al compilar el proyecto"
     exit 1
 fi
-echo "[OK] JAR compilado exitosamente"
+echo "[OK] Fat JAR compilado exitosamente"
+
+# Crear JAR plano (sin BOOT-INF) para jpackage
+echo "[BUILD] Creando JAR plano para jpackage..."
+PLAIN_JAR="$TARGET_DIR/gestor-tareas-jpackage.jar"
+mkdir -p "$TARGET_DIR/jpackage-staging"
+cd "$TARGET_DIR/jpackage-staging"
+
+# Extraer dependencias del fat JAR
+jar xf "$TARGET_DIR/gestor-tareas-1.0.0-SNAPSHOT.jar" BOOT-INF/lib/ BOOT-INF/classes/
+
+# Crear JAR plano con clases y dependencias
+mkdir -p jpackage-contents
+cp -r BOOT-INF/classes/* jpackage-contents/
+cp -r BOOT-INF/lib/* jpackage-contents/
+
+# Generar MANIFEST.MF
+cat > jpackage-contents/META-INF/MANIFEST.MF << 'MANIFEST'
+Manifest-Version: 1.0
+Main-Class: com.academic.gestor.NativeLauncher
+MANIFEST
+
+cd jpackage-contents
+jar cfm "$PLAIN_JAR" META-INF/MANIFEST.MF .
+cd "$PROJECT_DIR"
+
+# Limpiar staging temporal
+rm -rf "$TARGET_DIR/jpackage-staging"
+echo "[OK] JAR plano creado: gestor-tareas-jpackage.jar"
 
 echo ""
 
@@ -74,10 +104,10 @@ echo "[BUILD] Creando app image para Linux..."
 rm -rf "$TARGET_DIR/installers"
 mkdir -p "$TARGET_DIR/installers"
 
-# Determinar el nombre del JAR compilado
-JAR_NAME=$(ls -1 "$TARGET_DIR"/gestor-tareas-*.jar 2>/dev/null | head -1)
-if [ -z "$JAR_NAME" ]; then
-    echo "[ERROR] No se encontró el JAR compilado en $TARGET_DIR"
+# Determinar el nombre del JAR plano
+JAR_NAME="$TARGET_DIR/gestor-tareas-jpackage.jar"
+if [ ! -f "$JAR_NAME" ]; then
+    echo "[ERROR] No se encontró el JAR plano en $JAR_NAME"
     exit 1
 fi
 JAR_BASENAME=$(basename "$JAR_NAME")

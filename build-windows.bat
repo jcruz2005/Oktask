@@ -61,13 +61,30 @@ echo.
 REM Compilar JAR
 echo [BUILD] Compilando JAR con Maven...
 cd /d "%PROJECT_DIR%"
-call mvn clean package -Dmaven.test.skip=true -q
+call mvn clean package -DskipTests -q
 
 if errorlevel 1 (
     echo [ERROR] Error al compilar el proyecto
     exit /b 1
 )
-echo [OK] JAR compilado exitosamente
+echo [OK] Fat JAR compilado exitosamente
+
+REM Crear JAR plano (sin BOOT-INF) para jpackage
+echo [BUILD] Creando JAR plano para jpackage...
+set "PLAIN_JAR=%TARGET_DIR%\gestor-tareas-jpackage.jar"
+mkdir "%TARGET_DIR%\jpackage-staging" 2>nul
+cd /d "%TARGET_DIR%\jpackage-staging"
+jar xf "%TARGET_DIR%\gestor-tareas-1.0.0-SNAPSHOT.jar" BOOT-INF/lib/ BOOT-INF/classes/
+mkdir "jpackage-contents" 2>nul
+xcopy /E /Y /Q "BOOT-INF\classes\*" "jpackage-contents\" >nul
+xcopy /E /Y /Q "BOOT-INF\lib\*" "jpackage-contents\" >nul
+echo Manifest-Version: 1.0> "jpackage-contents\META-INF\MANIFEST.MF"
+echo Main-Class: com.academic.gestor.NativeLauncher>> "jpackage-contents\META-INF\MANIFEST.MF"
+cd /d "jpackage-contents"
+jar cfm "%PLAIN_JAR%" META-INF\MANIFEST.MF .
+cd /d "%PROJECT_DIR%"
+rmdir /s /q "%TARGET_DIR%\jpackage-staging" 2>nul
+echo [OK] JAR plano creado: gestor-tareas-jpackage.jar
 
 echo.
 
@@ -76,16 +93,10 @@ echo [BUILD] Creando app image para Windows...
 if exist "%TARGET_DIR%\installers" rmdir /s /q "%TARGET_DIR%\installers"
 mkdir "%TARGET_DIR%\installers"
 
-REM Determinar el nombre del JAR compilado
-set "JAR_NAME="
-for %%f in ("%TARGET_DIR%\gestor-tareas-*.jar") do (
-    set "JAR_NAME=%%~nxf"
-    goto :found_jar
-)
-
-:found_jar
-if "%JAR_NAME%"=="" (
-    echo [ERROR] No se encontro el JAR compilado en %TARGET_DIR%
+REM Usar el JAR plano
+set "JAR_NAME=gestor-tareas-jpackage.jar"
+if not exist "%TARGET_DIR%\%JAR_NAME%" (
+    echo [ERROR] No se encontro el JAR plano en %TARGET_DIR%\%JAR_NAME%
     exit /b 1
 )
 echo [INFO] Usando JAR: %JAR_NAME%
