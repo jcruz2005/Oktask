@@ -111,7 +111,7 @@ class NativeLauncherTest {
 
         @Test
         @DisplayName("deberia tener campo webView inicializado en null")
-        void deberiaTenerCampoWebViewInicializadoEnNull() {
+        void deberiaTenerCampoWebViewInicializadoEnNull() throws Exception {
             // Arrange
             NativeLauncher launcher = new NativeLauncher();
 
@@ -126,7 +126,7 @@ class NativeLauncherTest {
 
         @Test
         @DisplayName("deberia tener campo webEngine inicializado en null")
-        void deberiaTenerCampoWebEngineInicializadoEnNull() {
+        void deberiaTenerCampoWebEngineInicializadoEnNull() throws Exception {
             // Arrange
             NativeLauncher launcher = new NativeLauncher();
 
