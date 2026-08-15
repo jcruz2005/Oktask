@@ -137,7 +137,7 @@ echo "[BUILD] Copiando JavaFX al directorio de entrada..."
 JAVAFX_MODULES="javafx.controls,javafx.web"
 JAVAFX_JARS=$(find ~/.m2/repository/org/openjfx -name "*.jar" \
     -not -name "*sources*" -not -name "*javadoc*" \
-    -not -name "*win*" -not -name "*mac*" -not -name "*linux*" 2>/dev/null)
+    -not -name "*win*" -not -name "*mac*" 2>/dev/null)
 if [ -z "$JAVAFX_JARS" ]; then
     echo "[WARN] No se encontraron JARs de JavaFX en .m2, buscando en classpath..."
     JAVAFX_JARS=$(mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout 2>/dev/null | tr ':' '\n' | grep javafx)
