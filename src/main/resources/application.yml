@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gestor-tareas-academicas
+
+  datasource:
+    url: jdbc:sqlite:data/gestor-tareas.db
+    driver-class-name: org.sqlite.JDBC
+
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: America/Argentina/Buenos_Aires
+
+# Configuración por defecto del Pomodoro
+pomodoro:
+  duracion-trabajo: 25
+  duracion-descanso: 5
+  duracion-descanso-largo: 15
+  pomodoros-para-descanso-largo: 4

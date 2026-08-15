@@ -1,0 +1,14 @@
+# Directorio de Iconos para Aplicación Nativa
+#
+# Coloque aquí los iconos para la aplicación nativa:
+# - app-icon.png: Icono para Linux (256x256 px recomendado)
+# - app.ico: Icono para Windows
+# - app.icns: Icono para macOS
+#
+# Puede generar estos iconos desde una imagen fuente usando herramientas como:
+# - https://iconhandbook.com/
+# - https://www.icoconverter.com/
+# - ImageMagick: convert input.png -resize 256x256 app-icon.png
+#
+# @author Gestor de Tareas Académicas
+# @since 1.0.0
