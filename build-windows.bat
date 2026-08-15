@@ -117,10 +117,17 @@ if exist "%PROJECT_DIR%\native\icons\app.ico" (
     echo [WARN] No se encontro icono, se usara el predeterminado
 )
 
-REM Obtener module path de JavaFX desde Maven
-echo [BUILD] Detectando modulos JavaFX...
-set "JAVAFX_MODULES=javafx.controls,javafx.web,javafx.fxml"
-for /f "delims=" %%i in ('mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout 2^>nul ^| findstr /i "javafx"') do set "JAVAFX_MODULE_PATH=%%i"
+REM Copiar JavaFX JARs al directorio de entrada para que jpackage los incluya
+echo [BUILD] Copiando JavaFX al directorio de entrada...
+set "JAVAFX_MODULES=javafx.controls,javafx.web"
+set "JAVAFX_MODULE_PATH="
+for /r "%USERPROFILE%\.m2\repository\org\openjfx" %%j in (*.jar) do (
+    echo %%j | findstr /i "sources javadoc win mac linux" >nul
+    if errorlevel 1 (
+        copy "%%j" "%JPACKAGE_INPUT%\" >nul
+        set "JAVAFX_MODULE_PATH=!JAVAFX_MODULE_PATH!$APPDIR\%%~nxj;"
+    )
+)
 
 jpackage ^
     --type app-image ^

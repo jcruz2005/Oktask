@@ -125,18 +125,26 @@ else
     echo "[WARN] No se encontró icono .icns, se usará el predeterminado"
 fi
 
-# Obtener module path de JavaFX desde Maven
-echo "[BUILD] Detectando módulos JavaFX..."
-JAVAFX_MODULES="javafx.controls,javafx.web,javafx.fxml"
-JAVAFX_MODULE_PATH=$(mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout 2>/dev/null | tr ':' '\n' | grep javafx | tr '\n' ':')
-if [ -z "$JAVAFX_MODULE_PATH" ]; then
-    JAVAFX_MODULE_PATH=$(find ~/.m2/repository/org/openjfx -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" 2>/dev/null | tr '\n' ':')
+# Copiar JavaFX JARs al directorio de entrada para que jpackage los incluya
+echo "[BUILD] Copiando JavaFX al directorio de entrada..."
+JAVAFX_MODULES="javafx.controls,javafx.web"
+JAVAFX_JARS=$(find ~/.m2/repository/org/openjfx -name "*.jar" \
+    -not -name "*sources*" -not -name "*javadoc*" \
+    -not -name "*win*" -not -name "*linux*" 2>/dev/null)
+if [ -z "$JAVAFX_JARS" ]; then
+    JAVAFX_JARS=$(mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout 2>/dev/null | tr ':' '\n' | grep javafx)
 fi
-if [ -z "$JAVAFX_MODULE_PATH" ]; then
+if [ -z "$JAVAFX_JARS" ]; then
     echo "[ERROR] No se encontraron dependencias de JavaFX"
     exit 1
 fi
-echo "[OK] JavaFX module path detectado"
+
+JAVAFX_MODULE_PATH=""
+while IFS= read -r jar; do
+    cp "$jar" "$JPACKAGE_INPUT/"
+    JAVAFX_MODULE_PATH="${JAVAFX_MODULE_PATH}\$APPDIR/$(basename "$jar"):"
+done <<< "$JAVAFX_JARS"
+echo "[OK] JavaFX copiado ($(echo "$JAVAFX_JARS" | wc -l) JARs)"
 
 jpackage \
     --type app-image \
