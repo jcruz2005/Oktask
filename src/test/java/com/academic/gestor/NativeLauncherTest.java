@@ -116,7 +116,9 @@ class NativeLauncherTest {
             NativeLauncher launcher = new NativeLauncher();
 
             // Act
-            WebView webView = launcher.webView;
+            java.lang.reflect.Field field = NativeLauncher.class.getDeclaredField("webView");
+            field.setAccessible(true);
+            Object webView = field.get(launcher);
 
             // Assert
             assertNull(webView);
@@ -129,7 +131,9 @@ class NativeLauncherTest {
             NativeLauncher launcher = new NativeLauncher();
 
             // Act
-            WebEngine webEngine = launcher.webEngine;
+            java.lang.reflect.Field field = NativeLauncher.class.getDeclaredField("webEngine");
+            field.setAccessible(true);
+            Object webEngine = field.get(launcher);
 
             // Assert
             assertNull(webEngine);

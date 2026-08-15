@@ -59,7 +59,7 @@ echo ""
 # Compilar JAR
 echo "[BUILD] Compilando JAR con Maven..."
 cd "$PROJECT_DIR"
-mvn clean package -DskipTests -q
+mvn clean package -Dmaven.test.skip=true -q
 
 if [ $? -ne 0 ]; then
     echo "[ERROR] Error al compilar el proyecto"
@@ -100,14 +100,11 @@ jpackage \
     --main-class com.academic.gestor.NativeLauncher \
     --main-jar "$JAR_BASENAME" \
     $ICON_PATH \
-    --java-options "-Djava.library.path=\$APPDIR/../runtime/lib" \
     --java-options "-Dspring.profiles.active=native" \
     --java-options "-Xmx512m" \
     --app-version "1.0.0" \
     --vendor "Academic" \
-    --description "Gestor de Tareas Académicas con Pomodoro" \
-    --linux-menu-name "Gestor Tareas" \
-    --linux-package-name "gestor-tareas"
+    --description "Gestor de Tareas Académicas con Pomodoro"
 
 if [ $? -ne 0 ]; then
     echo "[ERROR] Error al crear la app image"

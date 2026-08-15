@@ -37,7 +37,7 @@ class TareaTest {
             // Act
             Tarea tarea = new Tarea(id, TITULO_DEFAULT, DESCRIPCION_DEFAULT,
                     MATERIA_ID, FECHA_LIMITE_DEFAULT, PRIORIDAD_DEFAULT,
-                    EstadoTarea.EN_PROGRESO, fechaCreacion, fechaCompletado);
+                    EstadoTarea.EN_PROGRESO, fechaCreacion, fechaCompletado, 0);
 
             // Assert
             assertNotNull(tarea);
@@ -58,7 +58,7 @@ class TareaTest {
             // Arrange & Act
             Tarea tarea = new Tarea(UUID.randomUUID(), TITULO_DEFAULT, DESCRIPCION_DEFAULT,
                     MATERIA_ID, FECHA_LIMITE_DEFAULT, PRIORIDAD_DEFAULT,
-                    EstadoTarea.PENDIENTE, LocalDateTime.now(), null);
+                    EstadoTarea.PENDIENTE, LocalDateTime.now(), null, 0);
 
             // Assert
             assertNull(tarea.getFechaCompletado());
@@ -71,7 +71,7 @@ class TareaTest {
             assertThrows(IllegalArgumentException.class,
                     () -> new Tarea(UUID.randomUUID(), null, DESCRIPCION_DEFAULT,
                             MATERIA_ID, FECHA_LIMITE_DEFAULT, PRIORIDAD_DEFAULT,
-                            EstadoTarea.PENDIENTE, LocalDateTime.now(), null));
+                            EstadoTarea.PENDIENTE, LocalDateTime.now(), null, 0));
         }
 
         @Test
@@ -81,7 +81,7 @@ class TareaTest {
             assertThrows(NullPointerException.class,
                     () -> new Tarea(UUID.randomUUID(), TITULO_DEFAULT, DESCRIPCION_DEFAULT,
                             null, FECHA_LIMITE_DEFAULT, PRIORIDAD_DEFAULT,
-                            EstadoTarea.PENDIENTE, LocalDateTime.now(), null));
+                            EstadoTarea.PENDIENTE, LocalDateTime.now(), null, 0));
         }
 
         @Test
@@ -91,7 +91,7 @@ class TareaTest {
             assertThrows(NullPointerException.class,
                     () -> new Tarea(UUID.randomUUID(), TITULO_DEFAULT, DESCRIPCION_DEFAULT,
                             MATERIA_ID, null, PRIORIDAD_DEFAULT,
-                            EstadoTarea.PENDIENTE, LocalDateTime.now(), null));
+                            EstadoTarea.PENDIENTE, LocalDateTime.now(), null, 0));
         }
 
         @Test
@@ -101,7 +101,7 @@ class TareaTest {
             assertThrows(NullPointerException.class,
                     () -> new Tarea(UUID.randomUUID(), TITULO_DEFAULT, DESCRIPCION_DEFAULT,
                             MATERIA_ID, FECHA_LIMITE_DEFAULT, null,
-                            EstadoTarea.PENDIENTE, LocalDateTime.now(), null));
+                            EstadoTarea.PENDIENTE, LocalDateTime.now(), null, 0));
         }
 
         @Test
@@ -111,7 +111,7 @@ class TareaTest {
             assertThrows(NullPointerException.class,
                     () -> new Tarea(UUID.randomUUID(), TITULO_DEFAULT, DESCRIPCION_DEFAULT,
                             MATERIA_ID, FECHA_LIMITE_DEFAULT, PRIORIDAD_DEFAULT,
-                            null, LocalDateTime.now(), null));
+                            null, LocalDateTime.now(), null, 0));
         }
     }
 
@@ -287,10 +287,10 @@ class TareaTest {
             // Arrange
             UUID id = UUID.randomUUID();
             Tarea t1 = new Tarea(id, "T1", "D1", MATERIA_ID, FECHA_LIMITE_DEFAULT,
-                    PRIORIDAD_DEFAULT, EstadoTarea.PENDIENTE, LocalDateTime.now(), null);
+                    PRIORIDAD_DEFAULT, EstadoTarea.PENDIENTE, LocalDateTime.now(), null, 0);
             Tarea t2 = new Tarea(id, "T2", "D2", UUID.randomUUID(),
                     LocalDate.now().plusDays(20), Prioridad.BAJA,
-                    EstadoTarea.COMPLETADA, LocalDateTime.now(), LocalDateTime.now());
+                    EstadoTarea.COMPLETADA, LocalDateTime.now(), LocalDateTime.now(), 0);
 
             // Act & Assert
             assertEquals(t1, t2);

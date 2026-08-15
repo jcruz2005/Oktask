@@ -65,7 +65,7 @@ echo ""
 # Compilar JAR
 echo "[BUILD] Compilando JAR con Maven..."
 cd "$PROJECT_DIR"
-mvn clean package -DskipTests -q
+mvn clean package -Dmaven.test.skip=true -q
 
 if [ $? -ne 0 ]; then
     echo "[ERROR] Error al compilar el proyecto"

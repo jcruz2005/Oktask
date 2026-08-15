@@ -59,7 +59,8 @@ class TareaServiceImplTest {
                 Prioridad.ALTA,
                 EstadoTarea.PENDIENTE,
                 LocalDateTime.now(),
-                null
+                null,
+                0
         );
     }
 

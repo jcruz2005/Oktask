@@ -61,7 +61,7 @@ echo.
 REM Compilar JAR
 echo [BUILD] Compilando JAR con Maven...
 cd /d "%PROJECT_DIR%"
-call mvn clean package -DskipTests -q
+call mvn clean package -Dmaven.test.skip=true -q
 
 if errorlevel 1 (
     echo [ERROR] Error al compilar el proyecto
