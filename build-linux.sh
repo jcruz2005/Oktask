@@ -84,6 +84,7 @@ cp -r BOOT-INF/classes/* jpackage-contents/
 cp -r BOOT-INF/lib/* jpackage-contents/
 
 # Generar MANIFEST.MF
+mkdir -p jpackage-contents/META-INF
 cat > jpackage-contents/META-INF/MANIFEST.MF << 'MANIFEST'
 Manifest-Version: 1.0
 Main-Class: com.academic.gestor.NativeLauncher

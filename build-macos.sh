@@ -82,6 +82,7 @@ jar xf "$TARGET_DIR/gestor-tareas-1.0.0-SNAPSHOT.jar" BOOT-INF/lib/ BOOT-INF/cla
 mkdir -p jpackage-contents
 cp -r BOOT-INF/classes/* jpackage-contents/
 cp -r BOOT-INF/lib/* jpackage-contents/
+mkdir -p jpackage-contents/META-INF
 cat > jpackage-contents/META-INF/MANIFEST.MF << 'MANIFEST'
 Manifest-Version: 1.0
 Main-Class: com.academic.gestor.NativeLauncher
