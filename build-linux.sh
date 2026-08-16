@@ -75,13 +75,33 @@ PLAIN_JAR="$TARGET_DIR/gestor-tareas-jpackage.jar"
 mkdir -p "$TARGET_DIR/jpackage-staging"
 cd "$TARGET_DIR/jpackage-staging"
 
-# Extraer dependencias del fat JAR
-jar xf "$TARGET_DIR/gestor-tareas-1.0.0-SNAPSHOT.jar" BOOT-INF/lib/ BOOT-INF/classes/
+# Extraer clases de la aplicación
+jar xf "$TARGET_DIR/gestor-tareas-1.0.0-SNAPSHOT.jar" BOOT-INF/classes/
 
-# Crear JAR plano con clases y dependencias
+# Crear directorio plano con clases de la app
 mkdir -p jpackage-contents
 cp -r BOOT-INF/classes/* jpackage-contents/
-cp -r BOOT-INF/lib/* jpackage-contents/
+
+# Extraer TODOS los JARs de BOOT-INF/lib/ y mezclar sus clases en el JAR plano
+echo "[BUILD] Extrayendo dependencias de BOOT-INF/lib/..."
+mkdir -p BOOT-INF/lib-extracted
+cp BOOT-INF/lib/*.jar BOOT-INF/lib-extracted/ 2>/dev/null || true
+for lib_jar in BOOT-INF/lib-extracted/*.jar; do
+    if [ -f "$lib_jar" ]; then
+        EXTRACTION_DIR="BOOT-INF/lib-extracted/$(basename "$lib_jar" .jar)"
+        mkdir -p "$EXTRACTION_DIR"
+        cd "$EXTRACTION_DIR"
+        jar xf "$OLDPWD/$lib_jar" 2>/dev/null || true
+        # Copiar clases (directorios y archivos)
+        find . -mindepth 1 -maxdepth 1 ! -name "META-INF" -exec cp -r {} "$OLDPWD/jpackage-contents/" \;
+        # Copiar metadata de Spring (spring.factories, etc.) mezclando
+        if [ -d "META-INF" ]; then
+            mkdir -p "$OLDPWD/jpackage-contents/META-INF"
+            find META-INF -type f ! -name "MANIFEST.MF" -exec cp --parents {} "$OLDPWD/jpackage-contents/" \; 2>/dev/null || true
+        fi
+        cd "$OLDPWD"
+    fi
+done
 
 # Generar MANIFEST.MF
 mkdir -p jpackage-contents/META-INF
