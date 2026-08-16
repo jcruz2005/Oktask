@@ -62,52 +62,56 @@ public class NativeLauncher {
     private WebEngine webEngine;
 
     /**
-     * Inicia la ventana nativa JavaFX.
+     * Punto de entrada principal.
      *
-     * <p>Inicia el servidor Spring Boot en un hilo separado,
-     * espera a que esté listo, y configura la ventana JavaFX con
-     * un WebView que carga la aplicación web.</p>
+     * <p>Inicia Spring Boot en un hilo daemon, espera a que el servidor
+     * esté listo en el hilo principal, y luego inicializa JavaFX para
+     * crear la ventana nativa con WebView.</p>
+     *
+     * @param args argumentos de línea de comandos
      */
-    private void launchApp() {
-        // Iniciar Spring Boot en un hilo separado
-        startSpringBootServer();
+    public static void main(String[] args) {
+        log.info("Iniciando Gestor de Tareas Académicas...");
 
-        // Esperar a que el servidor esté listo
-        waitForServer();
-
-        // Crear ventana en el hilo de JavaFX
-        Platform.runLater(() -> {
-            Stage primaryStage = new Stage();
-
-            // Configurar WebView
-            configureWebView();
-
-            // Configurar ventana
-            configureStage(primaryStage);
-
-            // Crear y configurar escena
-            Scene scene = createScene();
-            applyStylesheet(scene);
-
-            primaryStage.setScene(scene);
-            primaryStage.show();
-        });
-    }
-
-    /**
-     * Inicia el servidor Spring Boot en un hilo daemon separado.
-     */
-    private void startSpringBootServer() {
+        // Paso 1: Iniciar Spring Boot en hilo daemon
         Thread serverThread = new Thread(() -> {
             try {
                 GestorTareasApplication.main(new String[]{});
             } catch (Exception e) {
                 log.error("Error al iniciar el servidor Spring Boot", e);
-                javafx.application.Platform.exit();
+                System.exit(1);
             }
         }, "spring-boot-server");
         serverThread.setDaemon(true);
         serverThread.start();
+
+        // Paso 2: Esperar servidor en el hilo principal (NO bloquea JavaFX)
+        NativeLauncher launcher = new NativeLauncher();
+        launcher.waitForServer();
+
+        // Paso 3: Inicializar JavaFX y crear ventana
+        log.info("Servidor listo, inicializando ventana JavaFX...");
+        Platform.setImplicitExit(true);
+        Platform.startup(() -> launcher.createAndShowWindow());
+    }
+
+    /**
+     * Crea y muestra la ventana JavaFX con WebView.
+     *
+     * <p>Este método se ejecuta en el hilo de JavaFX (JFXAT).</p>
+     */
+    private void createAndShowWindow() {
+        Stage primaryStage = new Stage();
+
+        configureWebView();
+        configureStage(primaryStage);
+
+        Scene scene = createScene();
+        applyStylesheet(scene);
+
+        primaryStage.setScene(scene);
+        primaryStage.show();
+        log.info("Ventana nativa mostrada");
     }
 
     /**
@@ -146,10 +150,10 @@ public class NativeLauncher {
             webEngine.getLoadWorker().cancel();
         }
 
-        // Usar Platform.exit() para cierre graceful de JavaFX
-        // El shutdown hook de Spring Boot se encargará del resto
-        javafx.application.Platform.setImplicitExit(true);
-        javafx.application.Platform.exit();
+        // Terminar toda la JVM (el daemon de Spring se cerrará automáticamente)
+        Platform.setImplicitExit(true);
+        Platform.exit();
+        System.exit(0);
     }
 
     /**
@@ -250,18 +254,5 @@ public class NativeLauncher {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupción esperando servidor", ie);
         }
-    }
-
-    /**
-     * Punto de entrada estático para lanzar la aplicación.
-     * Usa Platform.startup() en lugar de Application.launch()
-     * para compatibilidad con jpackage (classpath sin module path).
-     *
-     * @param args argumentos de línea de comandos
-     */
-    public static void main(String[] args) {
-        Platform.startup(() -> {
-            new NativeLauncher().launchApp();
-        });
     }
 }
