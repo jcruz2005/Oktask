@@ -477,20 +477,35 @@ class Pomodoro {
         if (this.sesionActual) {
             try {
                 await API.finalizarSesionPomodoro(this.sesionActual.id);
+                
+                // Calcular tiempo real transcurrido (no el configurado)
+                const minutosTranscurridos = this.calcularMinutosTranscurridos();
                 this.pomodorosHoy++;
-                this.tiempoTotalHoy += this.configuracion.duracionTrabajo;
+                this.tiempoTotalHoy += minutosTranscurridos;
                 this.actualizarEstadisticas();
                 
                 // Recargar tareas para mostrar el tiempo actualizado
                 await window.tareas?.cargarTareas();
                 
-                Utils.mostrarToast('¡Completado!', 'Pomodoro finalizado', 'success');
+                Utils.mostrarToast('¡Completado!', 
+                    `${minutosTranscurridos} minutos guardados`, 'success');
             } catch (error) {
                 console.error('Error al finalizar sesión:', error);
             }
         }
         
-        this.detener();
+        // Limpiar estado sin intentar cancelar la sesión ya completada
+        this.detenerTemporizador();
+        this.estado = 'inactivo';
+        this.sesionActual = null;
+        
+        // Resetear tiempo
+        this.tiempoTotal = (this.configuracion?.duracionTrabajo || 25) * 60;
+        this.tiempoRestante = this.tiempoTotal;
+        
+        this.mostrarBotones('inactivo');
+        this.actualizarDisplay();
+        this.quitarAnimaciones();
     }
 
     /**
@@ -560,11 +575,26 @@ class Pomodoro {
     /**
      * Se ejecuta cuando el temporizador termina
      */
-    temporizadorTerminado() {
+    async temporizadorTerminado() {
         this.detenerTemporizador();
         this.reproducirSonido();
         
         if (this.estado === 'trabajo') {
+            // Completar la sesión de trabajo cuando el timer termina
+            if (this.sesionActual) {
+                try {
+                    await API.finalizarSesionPomodoro(this.sesionActual.id);
+                    const minutosTranscurridos = this.calcularMinutosTranscurridos();
+                    this.pomodorosHoy++;
+                    this.tiempoTotalHoy += minutosTranscurridos;
+                    this.actualizarEstadisticas();
+                    await window.tareas?.cargarTareas();
+                } catch (error) {
+                    console.error('Error al finalizar sesión automáticamente:', error);
+                }
+                this.sesionActual = null;
+            }
+            
             this.mostrarAnimacionCompletado();
             Notificaciones.notificarPomodoroCompletado(this.configuracion.duracionTrabajo);
             

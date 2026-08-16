@@ -220,24 +220,7 @@
         <!-- Pomodoro -->
         <section id="tab-pomodoro" class="tab-content">
             <div class="pomodoro-page">
-                <!-- Sección de selección de tarea -->
-                <div class="pomodoro-seleccion-container" id="pomodoro-seleccion-container">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2><i class="fas fa-clock"></i> Seleccionar tarea para estudiar</h2>
-                            <button class="btn btn-primary btn-sm" id="btn-nueva-tarea-rapida">
-                                <i class="fas fa-plus"></i> Nueva tarea rápida
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <div id="pomodoro-task-list" class="pomodoro-task-list">
-                                <!-- Las tareas se cargan dinámicamente -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timer Pomodoro (oculto por defecto) -->
+                <!-- Columna izquierda: Timer + Stats (oculto por defecto) -->
                 <div class="pomodoro-timer-container d-none" id="pomodoro-timer-container">
                     <div class="card card-pomodoro-timer">
                         <div class="card-header">
@@ -296,53 +279,70 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
-<!-- Últimas sesiones -->
-                     <div class="card">
-                         <div class="card-header">
-                             <h2><i class="fas fa-history"></i> Últimas sesiones de hoy</h2>
-                         </div>
-                         <div class="card-body">
-                             <div id="pomodoro-historial" class="pomodoro-historial">
-                                 <p class="text-muted">No hay sesiones hoy</p>
-                             </div>
-                         </div>
-                     </div>
+                <!-- Columna derecha: Selección de tarea + Historial + Config -->
+                <div class="pomodoro-sidebar-container" id="pomodoro-seleccion-container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-clock"></i> Seleccionar tarea para estudiar</h2>
+                            <button class="btn btn-primary btn-sm" id="btn-nueva-tarea-rapida">
+                                <i class="fas fa-plus"></i> Nueva tarea rápida
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="pomodoro-task-list" class="pomodoro-task-list">
+                                <!-- Las tareas se cargan dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
 
-                     <!-- Configuración del Pomodoro -->
-                     <div class="card">
-                         <div class="card-header">
-                             <h2><i class="fas fa-cog"></i> Configuración del Pomodoro</h2>
-                         </div>
-                         <div class="card-body">
-                             <form id="pomodoro-config-form">
-                                 <div class="row g-3">
-                                     <div class="col-md-4">
-                                         <label class="form-label">Tiempo de trabajo (min)</label>
-                                         <input type="number" class="form-control" id="config-trabajo" min="1" max="120" value="25">
-                                     </div>
-                                     <div class="col-md-4">
-                                         <label class="form-label">Descanso corto (min)</label>
-                                         <input type="number" class="form-control" id="config-descanso" min="1" max="60" value="5">
-                                     </div>
-                                     <div class="col-md-4">
-                                         <label class="form-label">Descanso largo (min)</label>
-                                         <input type="number" class="form-control" id="config-descanso-largo" min="1" max="60" value="15">
-                                     </div>
-                                     <div class="col-md-4">
-                                         <label class="form-label">Pomodoros para descanso largo</label>
-                                         <input type="number" class="form-control" id="config-pomodoros-largo" min="1" max="12" value="4">
-                                     </div>
-                                 </div>
-                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                     <button type="submit" class="btn btn-primary">Guardar configuración</button>
-                                 </div>
-                             </form>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-         </section>
+                    <!-- Últimas sesiones -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-history"></i> Últimas sesiones de hoy</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="pomodoro-historial" class="pomodoro-historial">
+                                <p class="text-muted">No hay sesiones hoy</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración del Pomodoro -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-cog"></i> Configuración del Pomodoro</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="pomodoro-config-form">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tiempo de trabajo (min)</label>
+                                        <input type="number" class="form-control" id="config-trabajo" min="1" max="120" value="25">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Descanso corto (min)</label>
+                                        <input type="number" class="form-control" id="config-descanso" min="1" max="60" value="5">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Descanso largo (min)</label>
+                                        <input type="number" class="form-control" id="config-descanso-largo" min="1" max="60" value="15">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Pomodoros para descanso largo</label>
+                                        <input type="number" class="form-control" id="config-pomodoros-largo" min="1" max="12" value="4">
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                                    <button type="submit" class="btn btn-primary">Guardar configuración</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Modal: Crear/Editar Materia -->
