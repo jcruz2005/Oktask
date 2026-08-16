@@ -82,24 +82,18 @@ public class SesionPomodoroRepositoryImpl implements SesionPomodoroRepository {
 
     @Override
     public long sumDuracionByMateriaId(final UUID materiaId) {
-        return jpaRepository.sumDuracionByMateriaId(
-                materiaId, TipoSesion.TRABAJO.name(), true
-        );
+        return jpaRepository.sumDuracionRealByMateriaId(materiaId);
     }
 
     @Override
     public long sumDuracionByFechaInRange(final LocalDateTime inicio, final LocalDateTime fin) {
-        return jpaRepository.sumDuracionByFechaInRange(
-                TipoSesion.TRABAJO.name(), true, inicio, fin
-        );
+        return jpaRepository.sumDuracionRealByFechaInRange(inicio, fin);
     }
 
     @Override
     public long sumDuracionByMateriaIdAndFechaInRange(final UUID materiaId,
                                                        final LocalDateTime inicio,
                                                        final LocalDateTime fin) {
-        return jpaRepository.sumDuracionByMateriaIdAndFechaInRange(
-                materiaId, TipoSesion.TRABAJO.name(), true, inicio, fin
-        );
+        return jpaRepository.sumDuracionRealByMateriaIdAndFechaInRange(materiaId, inicio, fin);
     }
 }

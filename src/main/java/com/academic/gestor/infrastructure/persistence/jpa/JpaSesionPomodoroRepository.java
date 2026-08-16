@@ -50,53 +50,49 @@ public interface JpaSesionPomodoroRepository extends JpaRepository<SesionPomodor
     );
 
     /**
-     * Suma la duración total de sesiones completadas de trabajo para una materia.
+     * Suma la duración REAL (fechaFin - fechaInicio) de sesiones completadas de trabajo para una materia.
      *
      * @param materiaId ID de la materia
-     * @param tipoSesion tipo de sesión
-     * @param completada si está completada
-     * @return total de minutos
+     * @return total de minutos reales estudiados
      */
-    @Query("SELECT COALESCE(SUM(s.duracionMinutos), 0) FROM SesionPomodoroEntity s " +
-            "WHERE s.materiaId = :materiaId AND s.tipoSesion = :tipoSesion AND s.completada = :completada")
-    long sumDuracionByMateriaId(@Param("materiaId") UUID materiaId,
-                                @Param("tipoSesion") String tipoSesion,
-                                @Param("completada") boolean completada);
+    @Query(value = "SELECT COALESCE(SUM(CAST((julianday(s.fecha_fin) - julianday(s.fecha_inicio)) * 24 * 60 AS INTEGER)), 0) " +
+            "FROM sesiones_pomodoro s " +
+            "WHERE s.materia_id = :materiaId AND s.tipo_sesion = 'TRABAJO' AND s.completada = 1 " +
+            "AND s.fecha_fin IS NOT NULL",
+            nativeQuery = true)
+    long sumDuracionRealByMateriaId(@Param("materiaId") UUID materiaId);
 
     /**
-     * Suma la duración total de sesiones completadas de trabajo en un rango de fechas.
+     * Suma la duración REAL (fechaFin - fechaInicio) de sesiones completadas de trabajo en un rango de fechas.
      *
-     * @param tipoSesion tipo de sesión
-     * @param completada si está completada
      * @param fechaInicio fecha de inicio
      * @param fechaFin fecha de fin
-     * @return total de minutos
+     * @return total de minutos reales estudiados
      */
-    @Query("SELECT COALESCE(SUM(s.duracionMinutos), 0) FROM SesionPomodoroEntity s " +
-            "WHERE s.tipoSesion = :tipoSesion AND s.completada = :completada " +
-            "AND s.fechaInicio BETWEEN :fechaInicio AND :fechaFin")
-    long sumDuracionByFechaInRange(@Param("tipoSesion") String tipoSesion,
-                                   @Param("completada") boolean completada,
-                                   @Param("fechaInicio") LocalDateTime fechaInicio,
-                                   @Param("fechaFin") LocalDateTime fechaFin);
+    @Query(value = "SELECT COALESCE(SUM(CAST((julianday(s.fecha_fin) - julianday(s.fecha_inicio)) * 24 * 60 AS INTEGER)), 0) " +
+            "FROM sesiones_pomodoro s " +
+            "WHERE s.tipo_sesion = 'TRABAJO' AND s.completada = 1 " +
+            "AND s.fecha_fin IS NOT NULL " +
+            "AND s.fecha_inicio BETWEEN :fechaInicio AND :fechaFin",
+            nativeQuery = true)
+    long sumDuracionRealByFechaInRange(@Param("fechaInicio") LocalDateTime fechaInicio,
+                                       @Param("fechaFin") LocalDateTime fechaFin);
 
     /**
-     * Suma la duración de sesiones de trabajo para una materia en un rango de fechas.
+     * Suma la duración REAL (fechaFin - fechaInicio) de sesiones de trabajo para una materia en un rango de fechas.
      *
      * @param materiaId ID de la materia
-     * @param tipoSesion tipo de sesión
-     * @param completada si está completada
      * @param fechaInicio fecha de inicio
      * @param fechaFin fecha de fin
-     * @return total de minutos
+     * @return total de minutos reales estudiados
      */
-    @Query("SELECT COALESCE(SUM(s.duracionMinutos), 0) FROM SesionPomodoroEntity s " +
-            "WHERE s.materiaId = :materiaId AND s.tipoSesion = :tipoSesion " +
-            "AND s.completada = :completada " +
-            "AND s.fechaInicio BETWEEN :fechaInicio AND :fechaFin")
-    long sumDuracionByMateriaIdAndFechaInRange(@Param("materiaId") UUID materiaId,
-                                                @Param("tipoSesion") String tipoSesion,
-                                                @Param("completada") boolean completada,
-                                                @Param("fechaInicio") LocalDateTime fechaInicio,
-                                                @Param("fechaFin") LocalDateTime fechaFin);
+    @Query(value = "SELECT COALESCE(SUM(CAST((julianday(s.fecha_fin) - julianday(s.fecha_inicio)) * 24 * 60 AS INTEGER)), 0) " +
+            "FROM sesiones_pomodoro s " +
+            "WHERE s.materia_id = :materiaId AND s.tipo_sesion = 'TRABAJO' " +
+            "AND s.completada = 1 AND s.fecha_fin IS NOT NULL " +
+            "AND s.fecha_inicio BETWEEN :fechaInicio AND :fechaFin",
+            nativeQuery = true)
+    long sumDuracionRealByMateriaIdAndFechaInRange(@Param("materiaId") UUID materiaId,
+                                                   @Param("fechaInicio") LocalDateTime fechaInicio,
+                                                   @Param("fechaFin") LocalDateTime fechaFin);
 }
