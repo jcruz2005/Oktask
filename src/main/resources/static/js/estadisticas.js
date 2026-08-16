@@ -105,7 +105,7 @@ class Estadisticas {
     }
 
     /**
-     * Renderiza el gráfico de barras de horas
+     * Renderiza el gráfico de barras de minutos estudiados
      * @param {Array} estadisticas - Datos de estadísticas
      */
     renderizarGraficoHoras(estadisticas) {
@@ -117,9 +117,9 @@ class Estadisticas {
             this.chartHoras.destroy();
         }
 
-        // Preparar datos
+        // Preparar datos - convertir horas a minutos para mejor visualización
         const labels = estadisticas.map(e => e.codigoMateria || e.nombreMateria);
-        const horas = estadisticas.map(e => e.horasEstudiadas || 0);
+        const minutos = estadisticas.map(e => Math.round((e.horasEstudiadas || 0) * 60));
         const colores = estadisticas.map((e, i) => {
             const materia = window.materias?.obtenerMateria(e.materiaId);
             return materia?.color || this.obtenerColorIndice(i);
@@ -131,8 +131,8 @@ class Estadisticas {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Horas Estudiadas',
-                    data: horas,
+                    label: 'Minutos Estudiados',
+                    data: minutos,
                     backgroundColor: colores.map(c => Utils.colorConOpacidad(c, 0.7)),
                     borderColor: colores,
                     borderWidth: 2,
@@ -150,8 +150,8 @@ class Estadisticas {
                     tooltip: {
                         callbacks: {
                             label: (context) => {
-                                const horas = context.parsed.y;
-                                return `${Utils.formatearHoras(horas)}`;
+                                const min = context.parsed.y;
+                                return `${min} min`;
                             }
                         }
                     }
@@ -160,7 +160,7 @@ class Estadisticas {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            callback: (value) => `${value}h`
+                            callback: (value) => `${value}m`
                         },
                         grid: {
                             color: 'rgba(0, 0, 0, 0.05)'
