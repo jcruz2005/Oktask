@@ -1,191 +1,169 @@
 #!/bin/bash
-# build-macos.sh - Script de build nativo para macOS
-#
-# Este script compila la aplicación Spring Boot y crea una imagen
-# de aplicación nativa usando jpackage para distribución en macOS.
-#
-# Requisitos:
-# - Java 21 o superior
-# - Maven 3.8+
-# - jpackage (incluido en JDK 14+)
-# - Xcode Command Line Tools (para firmado de código)
-#
-# Uso:
-#   chmod +x build-macos.sh
-#   ./build-macos.sh
+# build-macos.sh - Build nativo para macOS con jpackage
 #
 # @author Gestor de Tareas Académicas
-# @since 1.0.0
+# @since 1.1.0
 
 set -e
 
-# Configuración de rutas
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$SCRIPT_DIR"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$PROJECT_DIR/target"
+JAVAFX_VERSION="21.0.1"
+APP_VERSION="1.1.0"
 
 echo "=========================================="
 echo "  BUILD NATIVO PARA macOS"
 echo "=========================================="
 echo ""
 
-# Verificar herramientas necesarias
+# Verificar herramientas
 echo "[BUILD] Verificando herramientas..."
-
-# Verificar Java 21
-if ! java -version 2>&1 | grep -q "21"; then
-    echo "[ERROR] Se requiere Java 21 o superior"
-    echo "[INFO] Versión actual:"
-    java -version 2>&1
-    exit 1
-fi
-echo "[OK] Java 21 detectado"
-
-# Verificar Maven
-if ! command -v mvn &> /dev/null; then
-    echo "[ERROR] Maven no encontrado en el PATH"
-    exit 1
-fi
-echo "[OK] Maven detectado"
-
-# Verificar jpackage
-if ! command -v jpackage &> /dev/null; then
-    echo "[ERROR] jpackage no encontrado. Asegúrese de usar JDK 14+"
-    exit 1
-fi
-echo "[OK] jpackage detectado"
-
-# Verificar si estamos en macOS
-if [[ "$(uname)" != "Darwin" ]]; then
-    echo "[WARN] Este script está diseñado para macOS. Puede fallar en otros sistemas."
-fi
-
+java -version 2>&1 | grep -q "21" || { echo "[ERROR] Se requiere Java 21"; exit 1; }
+command -v mvn &>/dev/null || { echo "[ERROR] Maven no encontrado"; exit 1; }
+command -v jpackage &>/dev/null || { echo "[ERROR] jpackage no encontrado"; exit 1; }
+echo "[OK] Todas las herramientas detectadas"
 echo ""
 
-# Compilar JAR
-echo "[BUILD] Compilando JAR con Maven..."
+# Compilar
+echo "[BUILD] Compilando..."
 cd "$PROJECT_DIR"
 mvn clean package -DskipTests -q
+echo "[OK] JAR compilado"
 
-if [ $? -ne 0 ]; then
-    echo "[ERROR] Error al compilar el proyecto"
-    exit 1
-fi
-echo "[OK] Fat JAR compilado exitosamente"
-
-# Crear JAR plano (sin BOOT-INF) para jpackage
+# Crear JAR plano preservando metadata de Spring Boot
+echo ""
 echo "[BUILD] Creando JAR plano para jpackage..."
 PLAIN_JAR="$TARGET_DIR/gestor-tareas-jpackage.jar"
-mkdir -p "$TARGET_DIR/jpackage-staging"
-cd "$TARGET_DIR/jpackage-staging"
-jar xf "$TARGET_DIR/gestor-tareas-1.0.0-SNAPSHOT.jar" BOOT-INF/lib/ BOOT-INF/classes/
-mkdir -p jpackage-contents
-cp -r BOOT-INF/classes/* jpackage-contents/
-cp -r BOOT-INF/lib/* jpackage-contents/
-mkdir -p jpackage-contents/META-INF
-cat > jpackage-contents/META-INF/MANIFEST.MF << 'MANIFEST'
+STAGING="$TARGET_DIR/jpackage-staging"
+rm -rf "$STAGING" "$PLAIN_JAR"
+mkdir -p "$STAGING/app"
+
+echo "[BUILD] Extrayendo fat JAR..."
+(cd "$STAGING" && jar xf "$TARGET_DIR/gestor-tareas-$APP_VERSION.jar")
+cp -r "$STAGING/BOOT-INF/classes/"* "$STAGING/app/"
+
+echo "[BUILD] Extrayendo dependencias (excluyendo JavaFX)..."
+for lib_jar in "$STAGING/BOOT-INF/lib/"*.jar; do
+    [ -f "$lib_jar" ] || continue
+    if echo "$(basename "$lib_jar")" | grep -q "^javafx-"; then
+        echo "[SKIP] $(basename "$lib_jar") → module-path"
+        continue
+    fi
+    EXTRACTION_DIR="$STAGING/tmp_extract"
+    rm -rf "$EXTRACTION_DIR"
+    mkdir -p "$EXTRACTION_DIR"
+    cd "$EXTRACTION_DIR"
+    jar xf "$lib_jar" 2>/dev/null || true
+    find . -mindepth 1 -maxdepth 1 ! -name "META-INF" -exec cp -r {} "$STAGING/app/" \; 2>/dev/null || true
+    if [ -d "META-INF" ]; then
+        [ -d "META-INF/spring" ] && mkdir -p "$STAGING/app/META-INF/spring" && cp -r META-INF/spring/* "$STAGING/app/META-INF/spring/" 2>/dev/null || true
+        if [ -f "META-INF/spring.factories" ]; then
+            mkdir -p "$STAGING/app/META-INF"
+            if [ -f "$STAGING/app/META-INF/spring.factories" ]; then
+                cat "$STAGING/app/META-INF/spring.factories" > "$STAGING/app/META-INF/spring.factories.merged"
+                while IFS= read -r line; do
+                    if ! grep -qF "$line" "$STAGING/app/META-INF/spring.factories.merged" 2>/dev/null; then
+                        echo "$line" >> "$STAGING/app/META-INF/spring.factories.merged"
+                    fi
+                done < META-INF/spring.factories
+                mv "$STAGING/app/META-INF/spring.factories.merged" "$STAGING/app/META-INF/spring.factories"
+            else
+                cp META-INF/spring.factories "$STAGING/app/META-INF/spring.factories"
+            fi
+        fi
+        if [ -d "META-INF/services" ]; then
+            mkdir -p "$STAGING/app/META-INF/services"
+            for svc_file in META-INF/services/*; do
+                [ -f "$svc_file" ] || continue
+                svc_name=$(basename "$svc_file")
+                if [ -f "$STAGING/app/META-INF/services/$svc_name" ]; then
+                    while IFS= read -r line; do
+                        if ! grep -qF "$line" "$STAGING/app/META-INF/services/$svc_name" 2>/dev/null; then
+                            echo "$line" >> "$STAGING/app/META-INF/services/$svc_name"
+                        fi
+                    done < "$svc_file"
+                else
+                    cp "$svc_file" "$STAGING/app/META-INF/services/$svc_name"
+                fi
+            done
+        fi
+    fi
+    cd "$STAGING"
+    rm -rf "$EXTRACTION_DIR"
+done
+
+mkdir -p "$STAGING/app/META-INF"
+cat > "$STAGING/app/META-INF/MANIFEST.MF" << 'MANIFEST'
 Manifest-Version: 1.0
 Main-Class: com.academic.gestor.NativeLauncher
 MANIFEST
-cd jpackage-contents
+
+cd "$STAGING/app"
+rm -f module-info.class
 jar cfm "$PLAIN_JAR" META-INF/MANIFEST.MF .
 cd "$PROJECT_DIR"
-rm -rf "$TARGET_DIR/jpackage-staging"
-echo "[OK] JAR plano creado: gestor-tareas-jpackage.jar"
 
+rm -rf "$STAGING"
+
+echo "[VERIFY] Verificando metadata..."
+jar tf "$PLAIN_JAR" | grep -q "AutoConfiguration.imports" && echo "[OK] AutoConfiguration.imports" || echo "[WARN] AutoConfiguration.imports NO encontrado"
+jar tf "$PLAIN_JAR" | grep -q "spring.factories" && echo "[OK] spring.factories" || echo "[WARN] spring.factories NO encontrado"
+echo "[OK] JAR plano creado"
+
+# Crear jpackage input con JavaFX
 echo ""
-
-# Crear app image con jpackage
-echo "[BUILD] Creando app image para macOS..."
-rm -rf "$TARGET_DIR/installers"
-mkdir -p "$TARGET_DIR/installers"
-
-# Usar el JAR plano
-JAR_NAME="$TARGET_DIR/gestor-tareas-jpackage.jar"
-if [ ! -f "$JAR_NAME" ]; then
-    echo "[ERROR] No se encontró el JAR plano en $JAR_NAME"
-    exit 1
-fi
-JAR_BASENAME=$(basename "$JAR_NAME")
-
-echo "[INFO] Usando JAR: $JAR_BASENAME"
-
-# Crear directorio de entrada aislado para jpackage
+echo "[BUILD] Preparando jpackage..."
 JPACKAGE_INPUT="$TARGET_DIR/jpackage-input"
 rm -rf "$JPACKAGE_INPUT"
 mkdir -p "$JPACKAGE_INPUT"
-cp "$JAR_NAME" "$JPACKAGE_INPUT/"
+cp "$PLAIN_JAR" "$JPACKAGE_INPUT/"
+
+JAVAFX_COUNT=0
+for jar in $(find ~/.m2/repository/org/openjfx -name "*${JAVAFX_VERSION}*mac*.jar" -type f 2>/dev/null | grep -v sources | grep -v javadoc); do
+    cp "$jar" "$JPACKAGE_INPUT/"
+    JAVAFX_COUNT=$((JAVAFX_COUNT + 1))
+done
+echo "[OK] JavaFX copiado ($JAVAFX_COUNT JARs mac)"
 
 # Verificar si existe el icono
 ICON_PATH=""
 if [ -f "$PROJECT_DIR/native/icons/app.icns" ]; then
     ICON_PATH="--icon $PROJECT_DIR/native/icons/app.icns"
     echo "[INFO] Icono encontrado: app.icns"
-else
-    echo "[WARN] No se encontró icono .icns, se usará el predeterminado"
 fi
 
-# Copiar JavaFX JARs al directorio de entrada para que jpackage los incluya
-echo "[BUILD] Copiando JavaFX al directorio de entrada..."
-JAVAFX_MODULES="javafx.controls,javafx.web"
-JAVAFX_JARS=$(find ~/.m2/repository/org/openjfx -name "*.jar" \
-    -not -name "*sources*" -not -name "*javadoc*" \
-    -not -name "*win*" -not -name "*linux*" 2>/dev/null)
-if [ -z "$JAVAFX_JARS" ]; then
-    JAVAFX_JARS=$(mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout 2>/dev/null | tr ':' '\n' | grep javafx)
-fi
-if [ -z "$JAVAFX_JARS" ]; then
-    echo "[ERROR] No se encontraron dependencias de JavaFX"
-    exit 1
-fi
-
-while IFS= read -r jar; do
-    cp "$jar" "$JPACKAGE_INPUT/"
-done <<< "$JAVAFX_JARS"
-echo "[OK] JavaFX copiado ($(echo "$JAVAFX_JARS" | wc -l) JARs)"
-
+# Crear app image
+echo "[BUILD] Creando app image..."
+rm -rf "$TARGET_DIR/installers"
 jpackage \
     --type app-image \
     --name "GestorTareasAcademicas" \
     --dest "$TARGET_DIR/installers" \
     --input "$JPACKAGE_INPUT" \
     --main-class com.academic.gestor.NativeLauncher \
-    --main-jar "$JAR_BASENAME" \
+    --main-jar "gestor-tareas-jpackage.jar" \
     $ICON_PATH \
-    --java-options "-Djava.library.path=\$APPDIR/../runtime/lib" \
     --java-options "-Dspring.profiles.active=native" \
     --java-options "-Xmx512m" \
-    --app-version "1.0.0" \
+    --app-version "$APP_VERSION" \
     --vendor "Academic" \
     --description "Gestor de Tareas Académicas con Pomodoro" \
     --mac-package-identifier "com.academic.gestor-tareas" \
-    --mac-package-name "Gestor Tareas"
+    --mac-package-name "Gestor Tareas" 2>&1
 
-# Limpiar directorio de entrada aislado
 rm -rf "$JPACKAGE_INPUT"
-
-if [ $? -ne 0 ]; then
-    echo "[ERROR] Error al crear la app image"
-    exit 1
-fi
 
 echo ""
 echo "=========================================="
-echo "  BUILD COMPLETADO EXITOSAMENTE"
+echo "  BUILD COMPLETADO"
 echo "=========================================="
 echo "[INFO] App image creada en: $TARGET_DIR/installers/"
 echo "[INFO] Para ejecutar: open $TARGET_DIR/installers/GestorTareasAcademicas.app"
 echo ""
-
-# Mostrar contenido del directorio de instaladores
-echo "[INFO] Contenido del directorio de instaladores:"
-ls -la "$TARGET_DIR/installers/" 2>/dev/null || echo "  (directorio vacío)"
-
-# Información adicional para macOS
-echo ""
-echo "[INFO] Para crear un instalador .pkg, use:"
+echo "[INFO] Para crear un instalador .pkg:"
 echo "  pkgbuild --component $TARGET_DIR/installers/GestorTareasAcademicas.app \\"
 echo "    --install-location /Applications \\"
 echo "    --identifier com.academic.gestor-tareas \\"
-echo "    --version 1.0.0 \\"
-echo "    gestor-tareas-1.0.0.pkg"
+echo "    --version $APP_VERSION \\"
+echo "    gestor-tareas-$APP_VERSION.pkg"
+echo ""

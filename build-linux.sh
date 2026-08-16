@@ -2,13 +2,14 @@
 # build-linux.sh - Build nativo para Linux con jpackage + JavaFX wrapper
 #
 # @author Gestor de Tareas Académicas
-# @since 1.0.2
+# @since 1.1.0
 
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$PROJECT_DIR/target"
 JAVAFX_VERSION="21.0.1"
+APP_VERSION="1.1.0"
 
 echo "=========================================="
 echo "  BUILD NATIVO PARA LINUX"
@@ -38,7 +39,7 @@ rm -rf "$STAGING" "$PLAIN_JAR"
 mkdir -p "$STAGING/app"
 
 echo "[BUILD] Extrayendo fat JAR..."
-(cd "$STAGING" && jar xf "$TARGET_DIR/gestor-tareas-1.0.0-SNAPSHOT.jar")
+(cd "$STAGING" && jar xf "$TARGET_DIR/gestor-tareas-$APP_VERSION.jar")
 cp -r "$STAGING/BOOT-INF/classes/"* "$STAGING/app/"
 
 echo "[BUILD] Extrayendo dependencias (excluyendo JavaFX)..."
@@ -142,7 +143,7 @@ jpackage \
     --main-jar "gestor-tareas-jpackage.jar" \
     --java-options "-Dspring.profiles.active=native" \
     --java-options "-Xmx512m" \
-    --app-version "1.0.0" \
+    --app-version "$APP_VERSION" \
     --vendor "Academic" \
     --description "Gestor de Tareas Académicas con Pomodoro" 2>&1
 
@@ -204,7 +205,7 @@ Type=Application
 Categories=Education;Productivity;
 Terminal=false
 StartupNotify=true
-Version=1.0.0
+Version=$APP_VERSION
 "
 
 [ -d "$HOME/Desktop" ] && echo "$DESKTOP_CONTENT" > "$HOME/Desktop/$DESKTOP_NAME.desktop" && chmod +x "$HOME/Desktop/$DESKTOP_NAME.desktop" && echo "[OK] Escritorio"
