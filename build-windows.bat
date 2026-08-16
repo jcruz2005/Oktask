@@ -119,13 +119,10 @@ if exist "%PROJECT_DIR%\native\icons\app.ico" (
 
 REM Copiar JavaFX JARs al directorio de entrada para que jpackage los incluya
 echo [BUILD] Copiando JavaFX al directorio de entrada...
-set "JAVAFX_MODULES=javafx.controls,javafx.web"
-set "JAVAFX_MODULE_PATH="
 for /r "%USERPROFILE%\.m2\repository\org\openjfx" %%j in (*.jar) do (
     echo %%j | findstr /i "sources javadoc mac linux" >nul
     if errorlevel 1 (
         copy "%%j" "%JPACKAGE_INPUT%\" >nul
-        set "JAVAFX_MODULE_PATH=!JAVAFX_MODULE_PATH!$APPDIR\%%~nxj;"
     )
 )
 
@@ -137,8 +134,6 @@ jpackage ^
     --main-class com.academic.gestor.NativeLauncher ^
     --main-jar "%JAR_NAME%" ^
     %ICON_OPTION% ^
-    --java-options "--add-modules=%JAVAFX_MODULES%" ^
-    --java-options "--module-path=%JAVAFX_MODULE_PATH%" ^
     --java-options "-Djava.library.path=%APPDIR%\..\runtime\lib" ^
     --java-options "-Dspring.profiles.active=native" ^
     --java-options "-Xmx512m" ^

@@ -148,10 +148,8 @@ if [ -z "$JAVAFX_JARS" ]; then
 fi
 
 # Copiar cada JAR de JavaFX al directorio de entrada
-JAVAFX_MODULE_PATH=""
 while IFS= read -r jar; do
     cp "$jar" "$JPACKAGE_INPUT/"
-    JAVAFX_MODULE_PATH="${JAVAFX_MODULE_PATH}\$APPDIR/$(basename "$jar"):"
 done <<< "$JAVAFX_JARS"
 echo "[OK] JavaFX copiado ($(echo "$JAVAFX_JARS" | wc -l) JARs)"
 
@@ -164,8 +162,6 @@ jpackage \
     --main-class com.academic.gestor.NativeLauncher \
     --main-jar "$JAR_BASENAME" \
     $ICON_PATH \
-    --java-options "--add-modules=$JAVAFX_MODULES" \
-    --java-options "--module-path=$JAVAFX_MODULE_PATH" \
     --java-options "-Dspring.profiles.active=native" \
     --java-options "-Xmx512m" \
     --app-version "1.0.0" \
