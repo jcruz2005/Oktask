@@ -41,9 +41,14 @@ echo "[BUILD] Extrayendo fat JAR..."
 (cd "$STAGING" && jar xf "$TARGET_DIR/gestor-tareas-1.0.0-SNAPSHOT.jar")
 cp -r "$STAGING/BOOT-INF/classes/"* "$STAGING/app/"
 
-echo "[BUILD] Extrayendo dependencias..."
+echo "[BUILD] Extrayendo dependencias (excluyendo JavaFX)..."
 for lib_jar in "$STAGING/BOOT-INF/lib/"*.jar; do
     [ -f "$lib_jar" ] || continue
+    # CR-003: Saltar JARs JavaFX - van en module-path, no en classpath
+    if echo "$(basename "$lib_jar")" | grep -q "^javafx-"; then
+        echo "[SKIP] $(basename "$lib_jar") → module-path"
+        continue
+    fi
     EXTRACTION_DIR="$STAGING/tmp_extract"
     rm -rf "$EXTRACTION_DIR"
     mkdir -p "$EXTRACTION_DIR"
@@ -52,7 +57,39 @@ for lib_jar in "$STAGING/BOOT-INF/lib/"*.jar; do
     find . -mindepth 1 -maxdepth 1 ! -name "META-INF" -exec cp -r {} "$STAGING/app/" \; 2>/dev/null || true
     if [ -d "META-INF" ]; then
         [ -d "META-INF/spring" ] && mkdir -p "$STAGING/app/META-INF/spring" && cp -r META-INF/spring/* "$STAGING/app/META-INF/spring/" 2>/dev/null || true
-        [ -f "META-INF/spring.factories" ] && mkdir -p "$STAGING/app/META-INF" && cp META-INF/spring.factories "$STAGING/app/META-INF/spring.factories" 2>/dev/null || true
+        # MERGEAR spring.factories (no sobreescribir)
+        if [ -f "META-INF/spring.factories" ]; then
+            mkdir -p "$STAGING/app/META-INF"
+            if [ -f "$STAGING/app/META-INF/spring.factories" ]; then
+                cat "$STAGING/app/META-INF/spring.factories" > "$STAGING/app/META-INF/spring.factories.merged"
+                while IFS= read -r line; do
+                    if ! grep -qF "$line" "$STAGING/app/META-INF/spring.factories.merged" 2>/dev/null; then
+                        echo "$line" >> "$STAGING/app/META-INF/spring.factories.merged"
+                    fi
+                done < META-INF/spring.factories
+                mv "$STAGING/app/META-INF/spring.factories.merged" "$STAGING/app/META-INF/spring.factories"
+            else
+                cp META-INF/spring.factories "$STAGING/app/META-INF/spring.factories"
+            fi
+        fi
+        # MERGEAR services/ (SLF4J, JDBC, etc. - cada dependencia agrega sus providers)
+        if [ -d "META-INF/services" ]; then
+            mkdir -p "$STAGING/app/META-INF/services"
+            for svc_file in META-INF/services/*; do
+                [ -f "$svc_file" ] || continue
+                svc_name=$(basename "$svc_file")
+                if [ -f "$STAGING/app/META-INF/services/$svc_name" ]; then
+                    # Merge: agregar lines que no estén ya
+                    while IFS= read -r line; do
+                        if ! grep -qF "$line" "$STAGING/app/META-INF/services/$svc_name" 2>/dev/null; then
+                            echo "$line" >> "$STAGING/app/META-INF/services/$svc_name"
+                        fi
+                    done < "$svc_file"
+                else
+                    cp "$svc_file" "$STAGING/app/META-INF/services/$svc_name"
+                fi
+            done
+        fi
     fi
     cd "$STAGING"
     rm -rf "$EXTRACTION_DIR"
@@ -65,6 +102,8 @@ Main-Class: com.academic.gestor.NativeLauncher
 MANIFEST
 
 cd "$STAGING/app"
+# CR-003b: Eliminar module-info.class del flat JAR (provoca conflicto con JPMS)
+rm -f module-info.class
 jar cfm "$PLAIN_JAR" META-INF/MANIFEST.MF .
 cd "$PROJECT_DIR"
 
@@ -83,16 +122,13 @@ rm -rf "$JPACKAGE_INPUT"
 mkdir -p "$JPACKAGE_INPUT"
 cp "$PLAIN_JAR" "$JPACKAGE_INPUT/"
 
-# Copiar JavaFX Linux JARs
+# Copiar SOLO JARs JavaFX Linux (contienen clases + nativas)
 JAVAFX_COUNT=0
 for jar in $(find ~/.m2/repository/org/openjfx -name "*${JAVAFX_VERSION}*linux*.jar" -type f 2>/dev/null); do
     cp "$jar" "$JPACKAGE_INPUT/"
     JAVAFX_COUNT=$((JAVAFX_COUNT + 1))
 done
-for jar in $(find ~/.m2/repository/org/openjfx -name "javafx-*${JAVAFX_VERSION}.jar" -not -name "*linux*" -not -name "*sources*" -not -name "*javadoc*" -type f 2>/dev/null); do
-    cp "$jar" "$JPACKAGE_INPUT/"
-done
-echo "[OK] JavaFX copiado ($JAVAFX_COUNT JARs con nativas)"
+echo "[OK] JavaFX copiado ($JAVAFX_COUNT JARs linux)"
 
 # Crear app image
 echo "[BUILD] Creando app image..."
@@ -127,7 +163,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APPDIR="$SCRIPT_DIR/../lib/app"
 RUNTIME="$SCRIPT_DIR/../lib/runtime"
 
-MODULE_PATH="$APPDIR/javafx-base-JAVAFX_VER-linux.jar:$APPDIR/javafx-graphics-JAVAFX_VER-linux.jar:$APPDIR/javafx-controls-JAVAFX_VER-linux.jar:$APPDIR/javafx-media-JAVAFX_VER-linux.jar:$APPDIR/javafx-web-JAVAFX_VER-linux.jar"
+# CR-001: Solo JARs -linux (contienen clases + nativas). Los sin -linux están vacíos.
+MODULE_PATH=$(echo "$APPDIR"/*-linux.jar | tr ' ' ':')
 
 if [ -f "$RUNTIME/bin/java" ]; then
     JAVA_CMD="$RUNTIME/bin/java"
@@ -145,8 +182,6 @@ exec "$JAVA_CMD" \
     com.academic.gestor.NativeLauncher "$@"
 WRAPPER
 
-# Reemplazar placeholder con versión real
-sed -i "s/JAVAFX_VER/$JAVAFX_VERSION/g" "$LAUNCHER_BIN"
 chmod +x "$LAUNCHER_BIN"
 
 echo ""
