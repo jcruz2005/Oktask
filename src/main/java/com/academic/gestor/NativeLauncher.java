@@ -1,6 +1,6 @@
 package com.academic.gestor;
 
-import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
@@ -15,18 +15,13 @@ import java.net.URL;
 /**
  * Launcher principal que crea ventana nativa con JavaFX WebView.
  *
- * <p>Esta clase reemplaza al browser del navegador con una ventana nativa,
- * permitiendo una experiencia de escritorio completa para la aplicación
- * de Gestión de Tareas Académicas.</p>
- *
- * <p>La aplicación Spring Boot se ejecuta en un hilo separado mientras
- * JavaFX maneja la interfaz gráfica nativa mediante un WebView que
- * renderiza la aplicación web.</p>
+ * <p>Esta clase NO extiende Application para compatibilidad con jpackage.
+ * Usa Platform.startup() para inicializar JavaFX desde el classpath.</p>
  *
  * @author Gestor de Tareas Académicas
  * @since 1.0.0
  */
-public class NativeLauncher extends Application {
+public class NativeLauncher {
 
     private static final Logger log = LoggerFactory.getLogger(NativeLauncher.class);
 
@@ -67,34 +62,36 @@ public class NativeLauncher extends Application {
     private WebEngine webEngine;
 
     /**
-     * Punto de entrada principal de la ventana nativa JavaFX.
+     * Inicia la ventana nativa JavaFX.
      *
-     * <p>Este método inicia el servidor Spring Boot en un hilo separado,
-     * espera a que esté listo, y luego configura la ventana JavaFX con
+     * <p>Inicia el servidor Spring Boot en un hilo separado,
+     * espera a que esté listo, y configura la ventana JavaFX con
      * un WebView que carga la aplicación web.</p>
-     *
-     * @param primaryStage la ventana principal de JavaFX
      */
-    @Override
-    public void start(Stage primaryStage) {
+    private void launchApp() {
         // Iniciar Spring Boot en un hilo separado
         startSpringBootServer();
 
         // Esperar a que el servidor esté listo
         waitForServer();
 
-        // Configurar WebView
-        configureWebView();
+        // Crear ventana en el hilo de JavaFX
+        Platform.runLater(() -> {
+            Stage primaryStage = new Stage();
 
-        // Configurar ventana
-        configureStage(primaryStage);
+            // Configurar WebView
+            configureWebView();
 
-        // Crear y configurar escena
-        Scene scene = createScene();
-        applyStylesheet(scene);
+            // Configurar ventana
+            configureStage(primaryStage);
 
-        primaryStage.setScene(scene);
-        primaryStage.show();
+            // Crear y configurar escena
+            Scene scene = createScene();
+            applyStylesheet(scene);
+
+            primaryStage.setScene(scene);
+            primaryStage.show();
+        });
     }
 
     /**
@@ -257,10 +254,14 @@ public class NativeLauncher extends Application {
 
     /**
      * Punto de entrada estático para lanzar la aplicación.
+     * Usa Platform.startup() en lugar de Application.launch()
+     * para compatibilidad con jpackage (classpath sin module path).
      *
      * @param args argumentos de línea de comandos
      */
     public static void main(String[] args) {
-        launch(args);
+        Platform.startup(() -> {
+            new NativeLauncher().launchApp();
+        });
     }
 }
