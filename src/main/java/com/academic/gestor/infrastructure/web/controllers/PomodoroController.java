@@ -174,7 +174,7 @@ public class PomodoroController {
                 null, // Se puede enriquecer con el título de la tarea
                 sesion.getMateriaId(),
                 null, // Se puede enriquecer con el nombre de la materia
-                sesion.getDuracion().minutos(),
+                (int) sesion.calcularDuracionReal(), // Tiempo real transcurrido, no el configurado
                 sesion.getTipoSesion(),
                 sesion.getFechaInicio(),
                 sesion.getFechaFin(),

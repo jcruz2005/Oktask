@@ -9,6 +9,7 @@ import com.academic.gestor.infrastructure.persistence.mappers.SesionPomodoroEnti
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -87,13 +88,27 @@ public class SesionPomodoroRepositoryImpl implements SesionPomodoroRepository {
 
     @Override
     public long sumDuracionByFechaInRange(final LocalDateTime inicio, final LocalDateTime fin) {
-        return jpaRepository.sumDuracionRealByFechaInRange(inicio, fin);
+        return jpaRepository.sumDuracionRealByFechaInRange(
+                toEpochMillis(inicio), toEpochMillis(fin)
+        );
     }
 
     @Override
     public long sumDuracionByMateriaIdAndFechaInRange(final UUID materiaId,
                                                        final LocalDateTime inicio,
                                                        final LocalDateTime fin) {
-        return jpaRepository.sumDuracionRealByMateriaIdAndFechaInRange(materiaId, inicio, fin);
+        return jpaRepository.sumDuracionRealByMateriaIdAndFechaInRange(
+                materiaId, toEpochMillis(inicio), toEpochMillis(fin)
+        );
+    }
+
+    /**
+     * Convierte LocalDateTime a epoch milliseconds para SQLite.
+     *
+     * @param dateTime fecha a convertir
+     * @return epoch milliseconds
+     */
+    private long toEpochMillis(final LocalDateTime dateTime) {
+        return dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 }
