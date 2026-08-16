@@ -1,5 +1,6 @@
 package com.academic.gestor;
 
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
@@ -15,13 +16,14 @@ import java.net.URL;
 /**
  * Launcher principal que crea ventana nativa con JavaFX WebView.
  *
- * <p>Esta clase NO extiende Application para compatibilidad con jpackage.
- * Usa Platform.startup() para inicializar JavaFX desde el classpath.</p>
+ * <p>Extiende {@link Application} para compatibilidad con jpackage.
+ * Inicia Spring Boot en un hilo daemon, espera a que el servidor
+ * esté listo, y luego muestra la ventana con WebView.</p>
  *
  * @author Gestor de Tareas Académicas
  * @since 1.0.0
  */
-public class NativeLauncher {
+public class NativeLauncher extends Application {
 
     private static final Logger log = LoggerFactory.getLogger(NativeLauncher.class);
 
@@ -64,16 +66,14 @@ public class NativeLauncher {
     /**
      * Punto de entrada principal.
      *
-     * <p>Inicia Spring Boot en un hilo daemon, espera a que el servidor
-     * esté listo en el hilo principal, y luego inicializa JavaFX para
-     * crear la ventana nativa con WebView.</p>
+     * <p>Inicia Spring Boot en un hilo daemon antes de lanzar JavaFX.</p>
      *
      * @param args argumentos de línea de comandos
      */
     public static void main(String[] args) {
         log.info("Iniciando Gestor de Tareas Académicas...");
 
-        // Paso 1: Iniciar Spring Boot en hilo daemon
+        // Iniciar Spring Boot en hilo daemon ANTES de launch()
         Thread serverThread = new Thread(() -> {
             try {
                 GestorTareasApplication.main(new String[]{});
@@ -85,24 +85,22 @@ public class NativeLauncher {
         serverThread.setDaemon(true);
         serverThread.start();
 
-        // Paso 2: Esperar servidor en el hilo principal (NO bloquea JavaFX)
-        NativeLauncher launcher = new NativeLauncher();
-        launcher.waitForServer();
+        // Esperar a que el servidor esté listo
+        waitForServer();
 
-        // Paso 3: Inicializar JavaFX y crear ventana
-        log.info("Servidor listo, inicializando ventana JavaFX...");
-        Platform.setImplicitExit(true);
-        Platform.startup(() -> launcher.createAndShowWindow());
+        // Lanzar JavaFX (bloquea hasta que se cierre la ventana)
+        launch(args);
     }
 
     /**
-     * Crea y muestra la ventana JavaFX con WebView.
+     * Callback de JavaFX llamado después de launch().
      *
-     * <p>Este método se ejecuta en el hilo de JavaFX (JFXAT).</p>
+     * <p>Crea y muestra la ventana principal con WebView.</p>
+     *
+     * @param primaryStage la ventana principal proporcionada por JavaFX
      */
-    private void createAndShowWindow() {
-        Stage primaryStage = new Stage();
-
+    @Override
+    public void start(Stage primaryStage) {
         configureWebView();
         configureStage(primaryStage);
 
@@ -150,7 +148,6 @@ public class NativeLauncher {
             webEngine.getLoadWorker().cancel();
         }
 
-        // Terminar toda la JVM (el daemon de Spring se cerrará automáticamente)
         Platform.setImplicitExit(true);
         Platform.exit();
         System.exit(0);
@@ -195,7 +192,7 @@ public class NativeLauncher {
      * @throws RuntimeException si el servidor no inicia a tiempo o hay
      *                          interrupción en el hilo
      */
-    private void waitForServer() {
+    private static void waitForServer() {
         log.info("Esperando servidor en {}...", SERVER_URL);
         int attempt = 0;
 
@@ -218,7 +215,7 @@ public class NativeLauncher {
      *
      * @return true si el servidor responde, false en caso contrario
      */
-    private boolean isServerReady() {
+    private static boolean isServerReady() {
         HttpURLConnection connection = null;
         try {
             URL url = new URL(SERVER_URL);
@@ -247,7 +244,7 @@ public class NativeLauncher {
     /**
      * Pausa el hilo antes del siguiente intento de conexión.
      */
-    private void sleepBeforeNextAttempt() {
+    private static void sleepBeforeNextAttempt() {
         try {
             Thread.sleep(SERVER_POLL_INTERVAL_MS);
         } catch (InterruptedException ie) {

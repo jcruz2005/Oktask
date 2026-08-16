@@ -23,6 +23,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$SCRIPT_DIR"
 TARGET_DIR="$PROJECT_DIR/target"
 
+# Versión de JavaFX (debe coincidir con pom.xml)
+JAVAFX_VERSION="21.0.1"
+
 echo "=========================================="
 echo "  BUILD NATIVO PARA LINUX"
 echo "=========================================="
@@ -60,7 +63,7 @@ echo ""
 echo "[BUILD] Compilando JAR con Maven..."
 cd "$PROJECT_DIR"
 
-# Primero generar el fat JAR para obtener dependencias
+# Generar el fat JAR
 mvn clean package -DskipTests -q
 
 if [ $? -ne 0 ]; then
@@ -136,8 +139,6 @@ JAR_BASENAME=$(basename "$JAR_NAME")
 echo "[INFO] Usando JAR: $JAR_BASENAME"
 
 # Crear directorio de entrada aislado para jpackage
-# IMPORTANTE: No usar --input "$TARGET_DIR" porque jpackage escanea todo
-# el directorio y causa recursión infinita con su propia salida en installers/
 JPACKAGE_INPUT="$TARGET_DIR/jpackage-input"
 rm -rf "$JPACKAGE_INPUT"
 mkdir -p "$JPACKAGE_INPUT"
@@ -152,26 +153,29 @@ else
     echo "[WARN] No se encontró icono, se usará el predeterminado"
 fi
 
-# Copiar JavaFX JARs al directorio de entrada para que jpackage los incluya
-echo "[BUILD] Copiando JavaFX al directorio de entrada..."
-JAVAFX_MODULES="javafx.controls,javafx.web"
-JAVAFX_JARS=$(find ~/.m2/repository/org/openjfx -name "*.jar" \
+# Copiar SOLO los JARs de JavaFX de la versión correcta (sin duplicados)
+echo "[BUILD] Copiando JavaFX v${JAVAFX_VERSION} al directorio de entrada..."
+JAVAFX_JARS=$(find ~/.m2/repository/org/openjfx -name "*-${JAVAFX_VERSION}.jar" \
     -not -name "*sources*" -not -name "*javadoc*" \
     -not -name "*win*" -not -name "*mac*" 2>/dev/null)
+
 if [ -z "$JAVAFX_JARS" ]; then
-    echo "[WARN] No se encontraron JARs de JavaFX en .m2, buscando en classpath..."
-    JAVAFX_JARS=$(mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout 2>/dev/null | tr ':' '\n' | grep javafx)
+    echo "[WARN] No se encontraron JARs de JavaFX v${JAVAFX_VERSION} en .m2, buscando en classpath..."
+    JAVAFX_JARS=$(mvn dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout 2>/dev/null | tr ':' '\n' | grep "openjfx.*${JAVAFX_VERSION}")
 fi
+
 if [ -z "$JAVAFX_JARS" ]; then
-    echo "[ERROR] No se encontraron dependencias de JavaFX"
+    echo "[ERROR] No se encontraron dependencias de JavaFX v${JAVAFX_VERSION}"
     exit 1
 fi
 
 # Copiar cada JAR de JavaFX al directorio de entrada
+JAVAFX_COUNT=0
 while IFS= read -r jar; do
     cp "$jar" "$JPACKAGE_INPUT/"
+    JAVAFX_COUNT=$((JAVAFX_COUNT + 1))
 done <<< "$JAVAFX_JARS"
-echo "[OK] JavaFX copiado ($(echo "$JAVAFX_JARS" | wc -l) JARs)"
+echo "[OK] JavaFX copiado ($JAVAFX_COUNT JARs, versión $JAVAFX_VERSION)"
 
 echo "[BUILD] Creando app image para Linux..."
 jpackage \

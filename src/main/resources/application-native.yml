@@ -23,7 +23,7 @@ spring:
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: false
 
 # Configuración de logging para producción
