@@ -75,8 +75,8 @@ PLAIN_JAR="$TARGET_DIR/gestor-tareas-jpackage.jar"
 mkdir -p "$TARGET_DIR/jpackage-staging"
 cd "$TARGET_DIR/jpackage-staging"
 
-# Extraer clases de la aplicación
-jar xf "$TARGET_DIR/gestor-tareas-1.0.0-SNAPSHOT.jar" BOOT-INF/classes/
+# Extraer clases de la aplicación y dependencias del fat JAR
+jar xf "$TARGET_DIR/gestor-tareas-1.0.0-SNAPSHOT.jar" BOOT-INF/classes/ BOOT-INF/lib/
 
 # Crear directorio plano con clases de la app
 mkdir -p jpackage-contents
