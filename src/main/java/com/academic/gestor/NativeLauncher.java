@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Launcher principal que crea ventana nativa con JavaFX WebView.
@@ -72,6 +75,9 @@ public class NativeLauncher extends Application {
      */
     public static void main(String[] args) {
         log.info("Iniciando Gestor de Tareas Académicas...");
+
+        // Crear directorio de datos si no existe
+        ensureDataDirectoryExists();
 
         // Iniciar Spring Boot en hilo daemon ANTES de launch()
         Thread serverThread = new Thread(() -> {
@@ -250,6 +256,30 @@ public class NativeLauncher extends Application {
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupción esperando servidor", ie);
+        }
+    }
+
+    /**
+     * Asegura que el directorio de datos exista antes de iniciar Spring Boot.
+     *
+     * <p>La base de datos SQLite requiere que el directorio padre exista
+     * antes de crear el archivo .db. Este método crea la estructura
+     * {@code ~/.gestor-tareas/data/} si no existe.</p>
+     */
+    private static void ensureDataDirectoryExists() {
+        try {
+            String userHome = System.getProperty("user.home");
+            Path dataDir = Paths.get(userHome, ".gestor-tareas", "data");
+
+            if (!Files.exists(dataDir)) {
+                Files.createDirectories(dataDir);
+                log.info("Directorio de datos creado: {}", dataDir);
+            } else {
+                log.debug("Directorio de datos ya existe: {}", dataDir);
+            }
+        } catch (Exception e) {
+            log.error("Error al crear directorio de datos", e);
+            throw new RuntimeException("No se pudo crear el directorio de datos", e);
         }
     }
 }
