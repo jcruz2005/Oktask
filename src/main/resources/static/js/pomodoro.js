@@ -577,7 +577,6 @@ class Pomodoro {
      */
     async temporizadorTerminado() {
         this.detenerTemporizador();
-        this.reproducirSonido();
         
         if (this.estado === 'trabajo') {
             // Completar la sesión de trabajo cuando el timer termina
@@ -596,18 +595,19 @@ class Pomodoro {
             }
             
             this.mostrarAnimacionCompletado();
-            Notificaciones.notificarPomodoroCompletado(this.configuracion.duracionTrabajo);
+            this.mostrarAlarmaPantallaCompleta('🍅 ¡Pomodoro completado!', 
+                `Completaste ${this.configuracion.duracionTrabajo} minutos de estudio.\nTomá un descanso.`);
             
             setTimeout(() => {
                 this.iniciarDescanso();
-            }, 2000);
+            }, 5000);
         } else if (this.estado === 'descanso') {
-            Notificaciones.notificarDescansoTerminado();
-            Utils.mostrarToast('Descanso terminado', 'Es hora de volver a estudiar', 'info');
+            this.mostrarAlarmaPantallaCompleta('⏰ ¡Descanso terminado!', 
+                'Es hora de volver a estudiar.\n¿Listo para el siguiente pomodoro?');
             
             setTimeout(() => {
                 this.detener();
-            }, 2000);
+            }, 5000);
         }
     }
 
@@ -768,8 +768,126 @@ class Pomodoro {
             crearBeep(880, 0.5, 0.3);    // Beep 3: 880Hz, 0.3s (más largo)
             
         } catch (error) {
-            console.warn('No se pudo reproducir sonido:', error);
+            console.warn('No se pudo reproducir sonido con Web Audio:', error);
+            // Fallback: intentar con HTML5 Audio
+            this.reproducirSonidoFallback();
         }
+    }
+
+    /**
+     * Fallback de sonido usando HTML5 Audio
+     */
+    reproducirSonidoFallback() {
+        try {
+            // Generar un tono simple con datos WAV
+            const sampleRate = 22050;
+            const duration = 0.3;
+            const frequency = 880;
+            const numSamples = Math.floor(sampleRate * duration);
+            const buffer = new ArrayBuffer(44 + numSamples * 2);
+            const view = new DataView(buffer);
+            
+            // WAV header
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + numSamples * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, numSamples * 2, true);
+            
+            for (let i = 0; i < numSamples; i++) {
+                const t = i / sampleRate;
+                const value = Math.sin(2 * Math.PI * frequency * t) * 0.5 * Math.exp(-t * 5);
+                view.setInt16(44 + i * 2, value * 32767, true);
+            }
+            
+            const blob = new Blob([buffer], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audio.volume = 0.8;
+            audio.play().catch(() => {});
+            
+            // Repetir 2 veces más con delay
+            setTimeout(() => { new Audio(url).play().catch(() => {}); }, 350);
+            setTimeout(() => { new Audio(url).play().catch(() => {}); }, 700);
+        } catch (error) {
+            console.warn('No se pudo reproducir sonido fallback:', error);
+        }
+    }
+
+    /**
+     * Muestra una alarma de pantalla completa con sonido y visual llamativo
+     * @param {string} titulo - Título de la alarma
+     * @param {string} mensaje - Mensaje descriptivo
+     */
+    mostrarAlarmaPantallaCompleta(titulo, mensaje) {
+        // Reproducir sonido
+        this.reproducirSonido();
+        
+        // Crear overlay de alarma
+        const overlay = document.createElement('div');
+        overlay.id = 'alarma-overlay';
+        overlay.innerHTML = `
+            <div class="alarma-contenido">
+                <div class="alarma-icono">${titulo.charAt(0) === '🍅' ? '🍅' : '⏰'}</div>
+                <h2 class="alarma-titulo">${titulo}</h2>
+                <p class="alarma-mensaje">${mensaje}</p>
+                <button class="alarma-boton" onclick="document.getElementById('alarma-overlay').remove()">
+                    <i class="fas fa-check"></i> Entendido
+                </button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        
+        // Animación de parpadeo del título
+        this.iniciarParpadeoTitulo(titulo);
+        
+        // Auto-cerrar después de 15 segundos
+        setTimeout(() => {
+            const el = document.getElementById('alarma-overlay');
+            if (el) el.remove();
+            this.detenerParpadeoTitulo();
+        }, 15000);
+    }
+
+    /**
+     * Inicia el parpadeo del título de la ventana para llamar la atención
+     * @param {string} titulo - Título alternativo a mostrar
+     */
+    iniciarParpadeoTitulo(titulo) {
+        const tituloOriginal = document.title;
+        let visible = true;
+        
+        this.intervaloTitulo = setInterval(() => {
+            document.title = visible ? titulo : '🍅 OKtask';
+            visible = !visible;
+        }, 1000);
+        
+        // Guardar para restaurar después
+        this.tituloOriginal = tituloOriginal;
+    }
+
+    /**
+     * Detiene el parpadeo del título
+     */
+    detenerParpadeoTitulo() {
+        if (this.intervaloTitulo) {
+            clearInterval(this.intervaloTitulo);
+            this.intervaloTitulo = null;
+        }
+        document.title = this.tituloOriginal || 'OKtask';
     }
 
     /**
