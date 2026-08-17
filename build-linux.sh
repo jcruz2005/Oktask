@@ -134,18 +134,28 @@ echo "[OK] JavaFX copiado ($JAVAFX_COUNT JARs linux)"
 # Crear app image
 echo "[BUILD] Creando app image..."
 rm -rf "$TARGET_DIR/installers"
-jpackage \
-    --type app-image \
-    --name "OKtask" \
-    --dest "$TARGET_DIR/installers" \
-    --input "$JPACKAGE_INPUT" \
-    --main-class com.academic.gestor.NativeLauncher \
-    --main-jar "oktask-jpackage.jar" \
-    --java-options "-Dspring.profiles.active=native" \
-    --java-options "-Xmx512m" \
-    --app-version "$APP_VERSION" \
-    --vendor "Academic" \
-    --description "OKtask - Gestor de tareas con Pomodoro" 2>&1
+
+JPACKAGE_ARGS=(
+    --type app-image
+    --name "OKtask"
+    --dest "$TARGET_DIR/installers"
+    --input "$JPACKAGE_INPUT"
+    --main-class com.academic.gestor.NativeLauncher
+    --main-jar "oktask-jpackage.jar"
+    --java-options "-Dspring.profiles.active=native"
+    --java-options "-Xmx512m"
+    --app-version "$APP_VERSION"
+    --vendor "Academic"
+    --description "OKtask - Gestor de tareas con Pomodoro"
+)
+
+# Agregar ícono si existe
+if [ -n "$ICON_FILE" ] && [ -f "$ICON_FILE" ]; then
+    JPACKAGE_ARGS+=(--icon "$ICON_FILE")
+    echo "[BUILD] Usando ícono: $ICON_FILE"
+fi
+
+jpackage "${JPACKAGE_ARGS[@]}" 2>&1
 
 rm -rf "$JPACKAGE_INPUT"
 
@@ -208,7 +218,7 @@ echo "=========================================="
 echo "[BUILD] Creando accesos directos..."
 DESKTOP_NAME="OKtask"
 ICON_FILE=""
-[ -f "$PROJECT_DIR/native/icons/app-icon.png" ] && ICON_FILE="$PROJECT_DIR/native/icons/app-icon.png"
+[ -f "$PROJECT_DIR/native/icons/icon.png" ] && ICON_FILE="$PROJECT_DIR/native/icons/icon.png"
 
 DESKTOP_CONTENT="[Desktop Entry]
 Name=OKtask
@@ -219,6 +229,7 @@ Type=Application
 Categories=Education;Productivity;
 Terminal=false
 StartupNotify=true
+Path=$(dirname "$LAUNCHER_BIN")
 Version=$APP_VERSION
 "
 

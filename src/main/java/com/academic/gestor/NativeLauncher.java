@@ -10,11 +10,16 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javafx.scene.image.Image;
+
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Launcher principal que crea ventana nativa con JavaFX WebView.
@@ -74,6 +79,12 @@ public class NativeLauncher extends Application {
      * @param args argumentos de línea de comandos
      */
     public static void main(String[] args) {
+        // Establecer perfil nativo ANTES de cualquier otra cosa para garantizar
+        // que application-native.yml se cargue correctamente y se use la DB
+        // con ruta absoluta (~/.oktask/data/oktask.db) en lugar de la ruta
+        // relativa (data/oktask.db) de application.yml.
+        System.setProperty("spring.profiles.active", "native");
+
         log.info("Iniciando OKtask...");
 
         // Crear directorio de datos si no existe
@@ -137,10 +148,47 @@ public class NativeLauncher extends Application {
         primaryStage.setMinWidth(MIN_WIDTH);
         primaryStage.setMinHeight(MIN_HEIGHT);
 
+        // Establecer ícono de la ventana
+        primaryStage.getIcons().addAll(loadAppIcons());
+
         // Manejar cierre de la aplicación
         primaryStage.setOnCloseRequest(event -> {
             handleApplicationClose();
         });
+    }
+
+    /**
+     * Carga los íconos de la aplicación desde los recursos del classpath.
+     *
+     * <p>Busca los archivos PNG en /icons/ con diferentes resoluciones
+     * para que el sistema operativo elija la más apropiada.</p>
+     *
+     * @return lista de imágenes de ícono cargadas
+     */
+    private List<Image> loadAppIcons() {
+        List<Image> icons = new ArrayList<>();
+        String[] sizes = {"16", "32", "48", "64", "128", "256", "512"};
+
+        for (String size : sizes) {
+            try {
+                String path = "/icons/oktask-" + size + "x" + size + ".png";
+                InputStream is = getClass().getResourceAsStream(path);
+                if (is != null) {
+                    icons.add(new Image(is));
+                    log.debug("Ícono cargado: {}", path);
+                }
+            } catch (Exception e) {
+                log.debug("No se pudo cargar ícono {}: {}", size, e.getMessage());
+            }
+        }
+
+        if (icons.isEmpty()) {
+            log.warn("No se encontraron íconos de aplicación en /icons/");
+        } else {
+            log.info("Íconos de aplicación cargados: {}", icons.size());
+        }
+
+        return icons;
     }
 
     /**

@@ -11,6 +11,7 @@ import com.academic.gestor.domain.ports.inbound.SesionPomodoroService;
 import com.academic.gestor.domain.ports.outbound.ConfiguracionPomodoroRepository;
 import com.academic.gestor.domain.ports.outbound.SesionPomodoroRepository;
 import com.academic.gestor.domain.ports.outbound.TareaRepository;
+import com.academic.gestor.notification.NativeNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,13 +82,19 @@ public class SesionPomodoroServiceImpl implements SesionPomodoroService {
         sesion.completar();
         final SesionPomodoro guardada = sesionRepository.save(sesion);
 
-        // Actualizar minutos de pomodoro en la tarea
+        // Actualizar minutos de pomodoro en la tarea y notificar
         if (sesion.getTipoSesion() == TipoSesion.TRABAJO) {
             tareaRepository.findById(sesion.getTareaId()).ifPresent(tarea -> {
                 tarea.agregarMinutosPomodoro((int) sesion.calcularDuracionReal());
                 tareaRepository.save(tarea);
                 log.info("Actualizados {} minutos pomodoro en tarea {}",
                         sesion.calcularDuracionReal(), tarea.getId());
+
+                // Mostrar notificación nativa siempre encima de otras ventanas
+                NativeNotification.getInstance().show(
+                        tarea.getTitulo(),
+                        "¡Pomodoro completado! Tomá un descanso."
+                );
             });
         }
 
