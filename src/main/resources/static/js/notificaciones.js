@@ -19,8 +19,13 @@ class Notificaciones {
         }
 
         if (Notification.permission !== 'denied') {
-            const permiso = await Notification.requestPermission();
-            return permiso === 'granted';
+            try {
+                const permiso = await Notification.requestPermission();
+                return permiso === 'granted';
+            } catch (error) {
+                console.warn('Error al solicitar permiso de notificaciones:', error);
+                return false;
+            }
         }
 
         return false;
@@ -36,12 +41,25 @@ class Notificaciones {
             const defaultOptions = {
                 icon: '/img/favicon.ico',
                 badge: '/img/favicon.ico',
-                vibrate: [200, 100, 200],
+                vibrate: [200, 100, 200, 100, 200],
+                requireInteraction: true,
                 ...opciones
             };
 
-            new Notification(titulo, defaultOptions);
+            try {
+                const notificacion = new Notification(titulo, defaultOptions);
+                
+                // Auto-cerrar después de 10 segundos si el usuario no interactúa
+                setTimeout(() => {
+                    notificacion.close();
+                }, 10000);
+                
+                return notificacion;
+            } catch (error) {
+                console.warn('Error al enviar notificación:', error);
+            }
         }
+        return null;
     }
 
     /**
@@ -76,9 +94,10 @@ class Notificaciones {
      */
     static notificarPomodoroCompletado(duracion) {
         this.enviar('🍅 ¡Pomodoro completado!', {
-            body: `Completaste ${duracion} minutos de estudio`,
+            body: `¡Buen trabajo! Completaste ${duracion} minutos de estudio.\n\nTomá un descanso de 5 minutos.`,
             tag: 'pomodoro-completado',
-            requireInteraction: true
+            requireInteraction: true,
+            silent: false
         });
     }
 
@@ -86,10 +105,11 @@ class Notificaciones {
      * Notifica cuando un descanso termina
      */
     static notificarDescansoTerminado() {
-        this.enviar('⏰ Descanso terminado', {
-            body: 'Es hora de volver a estudiar',
+        this.enviar('⏰ ¡Descanso terminado!', {
+            body: 'Es hora de volver a estudiar.\n\n¿Listo para el siguiente pomodoro?',
             tag: 'descanso-terminado',
-            requireInteraction: true
+            requireInteraction: true,
+            silent: false
         });
     }
 

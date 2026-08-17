@@ -206,14 +206,32 @@ class App {
      * Inicia las notificaciones
      */
     async iniciarNotificaciones() {
-        const permiso = await Notificaciones.solicitarPermiso();
-        
-        if (permiso) {
-            // Verificar tareas cada hora
+        // Verificar si el navegador soporta notificaciones
+        if (!('Notification' in window)) {
+            console.warn('Este navegador no soporta notificaciones');
+            return;
+        }
+
+        // Si ya tiene permiso, iniciar verificación
+        if (Notification.permission === 'granted') {
             Notificaciones.iniciarVerificacionPeriodica(
                 () => window.tareas?.cargarTareas(),
                 60
             );
+            return;
+        }
+
+        // Si no tiene permiso ni está denegado, solicitarlo después de un delay
+        if (Notification.permission !== 'denied') {
+            setTimeout(async () => {
+                const permiso = await Notificaciones.solicitarPermiso();
+                if (permiso) {
+                    Notificaciones.iniciarVerificacionPeriodica(
+                        () => window.tareas?.cargarTareas(),
+                        60
+                    );
+                }
+            }, 3000);
         }
     }
 

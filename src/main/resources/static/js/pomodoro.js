@@ -738,25 +738,35 @@ class Pomodoro {
     }
 
     /**
-     * Reproduce sonido de notificación
+     * Reproduce alarma de completado (3 beeps fuertes)
      */
     reproducirSonido() {
         try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
             
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+            // Función para crear un beep
+            const crearBeep = (frecuencia, inicio, duracion) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frecuencia;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.5, audioContext.currentTime + inicio);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + inicio + duracion);
+                
+                oscillator.start(audioContext.currentTime + inicio);
+                oscillator.stop(audioContext.currentTime + inicio + duracion);
+            };
             
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
+            // 3 beeps: alto, medio, alto (más noticeable)
+            crearBeep(880, 0, 0.2);      // Beep 1: 880Hz, 0.2s
+            crearBeep(1100, 0.25, 0.2);  // Beep 2: 1100Hz, 0.2s
+            crearBeep(880, 0.5, 0.3);    // Beep 3: 880Hz, 0.3s (más largo)
             
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.5);
         } catch (error) {
             console.warn('No se pudo reproducir sonido:', error);
         }
