@@ -24,6 +24,11 @@ import org.slf4j.LoggerFactory;
 
 import javafx.scene.image.Image;
 
+import com.academic.gestor.update.UpdateChecker;
+import com.academic.gestor.update.UpdateInfo;
+import com.academic.gestor.update.UpdateToast;
+import com.academic.gestor.update.UpdatePanel;
+
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -59,9 +64,14 @@ public class NativeLauncher extends Application {
     private static final String SERVER_URL = "http://localhost:" + SERVER_PORT;
     private static final String CSS_RESOURCE = "/native-window.css";
 
+    private static final String APP_VERSION = "1.1.0";
+
     private WebView webView;
     private WebEngine webEngine;
     private static final AtomicBoolean serverReady = new AtomicBoolean(false);
+
+    /** Servicio de verificación de actualizaciones. */
+    private UpdateChecker updateChecker;
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
@@ -113,6 +123,9 @@ public class NativeLauncher extends Application {
             waitForServer();
             Platform.runLater(() -> loadWebView(primaryStage));
         }, "server-watcher").start();
+
+        // Verificar actualizaciones en background (no bloquea)
+        checkForUpdates();
     }
 
     private StackPane createSplashScreen() {
@@ -161,6 +174,58 @@ public class NativeLauncher extends Application {
         }).start();
 
         return splash;
+    }
+
+    /**
+     * Verifica actualizaciones en background y muestra toast si hay una nueva versión.
+     */
+    private void checkForUpdates() {
+        new Thread(() -> {
+            try {
+                updateChecker = new UpdateChecker(APP_VERSION);
+                updateChecker.setListener(new UpdateChecker.UpdateListener() {
+                    @Override
+                    public void onUpdateAvailable(UpdateInfo info) {
+                        Platform.runLater(() -> {
+                            UpdateToast toast = new UpdateToast(() -> {
+                                UpdatePanel panel = new UpdatePanel(() -> {
+                                    // Abrir navegador con URL de descarga
+                                    openUrl(info.getDownloadUrl());
+                                });
+                                panel.show(info);
+                            });
+                            toast.show(info);
+                        });
+                    }
+
+                    @Override
+                    public void onNoUpdateAvailable() {
+                        System.out.println("[OKtask] Ya tienes la última versión");
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        System.out.println("[OKtask] No se pudo verificar actualizaciones: " + error);
+                    }
+                });
+
+                updateChecker.checkForUpdate();
+            } catch (Exception e) {
+                System.out.println("[OKtask] Error verificando actualizaciones: " + e.getMessage());
+            }
+        }, "update-checker").start();
+    }
+
+    /**
+     * Abre una URL en el navegador predeterminado.
+     */
+    private void openUrl(String url) {
+        if (url == null || url.isEmpty()) return;
+        try {
+            java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
+        } catch (Exception e) {
+            System.out.println("[OKtask] Error abriendo URL: " + e.getMessage());
+        }
     }
 
     private void loadWebView(Stage stage) {

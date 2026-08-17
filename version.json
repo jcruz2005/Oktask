@@ -1,0 +1,13 @@
+{
+  "version": "1.1.0",
+  "releaseDate": "2026-08-17",
+  "changelog": [
+    "Sistema de notificaciones de actualizaciones",
+    "Splash screen con carga inmediata",
+    "Optimización de inicio de la aplicación",
+    "Ícono nativo de la aplicación",
+    "Notificaciones pomodoro always-on-top"
+  ],
+  "downloadUrl": "https://github.com/jcruz2005/academic-gestor/releases/latest",
+  "minVersion": "1.0.0"
+}
