@@ -167,10 +167,24 @@ RUNTIME="$SCRIPT_DIR/../lib/runtime"
 # CR-001: Solo JARs -linux (contienen clases + nativas). Los sin -linux están vacíos.
 MODULE_PATH=$(echo "$APPDIR"/*-linux.jar | tr ' ' ':')
 
+# Buscar java en múltiples ubicaciones (PATH puede no estar disponible desde atajos)
 if [ -f "$RUNTIME/bin/java" ]; then
     JAVA_CMD="$RUNTIME/bin/java"
-else
+elif command -v java &>/dev/null; then
     JAVA_CMD="java"
+elif [ -f "/usr/bin/java" ]; then
+    JAVA_CMD="/usr/bin/java"
+elif [ -f "/usr/lib/jvm/java-21-openjdk/bin/java" ]; then
+    JAVA_CMD="/usr/lib/jvm/java-21-openjdk/bin/java"
+elif [ -f "/usr/lib/jvm/java-21-openjdk-amd64/bin/java" ]; then
+    JAVA_CMD="/usr/lib/jvm/java-21-openjdk-amd64/bin/java"
+else
+    # Buscar java en el sistema
+    JAVA_CMD=$(find /usr/lib/jvm -name "java" -type f 2>/dev/null | head -1)
+    if [ -z "$JAVA_CMD" ]; then
+        echo "ERROR: No se encontró Java. Instalá Java 21 o superior."
+        exit 1
+    fi
 fi
 
 exec "$JAVA_CMD" \

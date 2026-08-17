@@ -264,18 +264,28 @@ public class NativeLauncher extends Application {
      *
      * <p>La base de datos SQLite requiere que el directorio padre exista
      * antes de crear el archivo .db. Este método crea la estructura
-     * {@code ~/.gestor-tareas/data/} si no existe.</p>
+     * {@code ~/.oktask/data/} si no existe, y migra datos desde la
+     * ubicación anterior ({@code ~/.gestor-tareas/data/}) si es necesario.</p>
      */
     private static void ensureDataDirectoryExists() {
         try {
             String userHome = System.getProperty("user.home");
-            Path dataDir = Paths.get(userHome, ".oktask", "data");
+            Path newDataDir = Paths.get(userHome, ".oktask", "data");
+            Path newDbFile = newDataDir.resolve("oktask.db");
 
-            if (!Files.exists(dataDir)) {
-                Files.createDirectories(dataDir);
-                log.info("Directorio de datos creado: {}", dataDir);
-            } else {
-                log.debug("Directorio de datos ya existe: {}", dataDir);
+            // Crear directorio nuevo si no existe
+            if (!Files.exists(newDataDir)) {
+                Files.createDirectories(newDataDir);
+                log.info("Directorio de datos creado: {}", newDataDir);
+            }
+
+            // Migrar datos desde la ubicación anterior si la DB nueva no existe
+            if (!Files.exists(newDbFile)) {
+                Path oldDbFile = Paths.get(userHome, ".gestor-tareas", "data", "gestor-tareas.db");
+                if (Files.exists(oldDbFile)) {
+                    Files.copy(oldDbFile, newDbFile);
+                    log.info("Base de datos migrada desde: {} → {}", oldDbFile, newDbFile);
+                }
             }
         } catch (Exception e) {
             log.error("Error al crear directorio de datos", e);
