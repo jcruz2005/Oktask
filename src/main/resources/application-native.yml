@@ -4,20 +4,20 @@
 # se ejecuta como una aplicación de escritorio nativa usando
 # el NativeLauncher con JavaFX WebView.
 #
-# @author Gestor de Tareas Académicas
-# @since 1.0.0
+# @author OKtask
+# @since 1.1.0
 
 server:
   port: 8080
 
 spring:
   application:
-    name: gestor-tareas-academicas
+    name: oktask
   
   # Configuración de base de datos SQLite
   # Usa directorio del usuario para persistencia entre sesiones
   datasource:
-    url: jdbc:sqlite:${user.home}/.gestor-tareas/data/gestor-tareas.db
+    url: jdbc:sqlite:${user.home}/.oktask/data/oktask.db
     driver-class-name: org.sqlite.JDBC
   
   jpa:

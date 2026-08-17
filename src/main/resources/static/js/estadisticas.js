@@ -1,6 +1,6 @@
 /**
  * Estadísticas - Gráficos y análisis
- * Gestor de Tareas Académicas
+ * OKtask
  */
 
 class Estadisticas {

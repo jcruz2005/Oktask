@@ -1,6 +1,6 @@
 /**
  * Materias - Gestión de materias
- * Gestor de Tareas Académicas
+ * OKtask
  */
 
 class Materias {

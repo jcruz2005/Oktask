@@ -1,6 +1,6 @@
 /**
  * API - Comunicación con el Backend
- * Gestor de Tareas Académicas
+ * OKtask
  */
 
 const API_BASE = '/api';

@@ -1,6 +1,6 @@
 /**
  * Pomodoro - Temporizador Pomodoro (versión Tab)
- * Gestor de Tareas Académicas
+ * OKtask
  */
 
 class Pomodoro {

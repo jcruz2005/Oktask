@@ -1,6 +1,6 @@
 /**
  * Utils - Utilidades generales
- * Gestor de Tareas Académicas
+ * OKtask
  */
 
 class Utils {

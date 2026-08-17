@@ -1,6 +1,6 @@
 /**
  * Tareas - Gestión de tareas con Drag & Drop
- * Gestor de Tareas Académicas
+ * OKtask
  */
 
 class Tareas {

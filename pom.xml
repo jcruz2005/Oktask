@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>com.academic</groupId>
-    <artifactId>gestor-tareas</artifactId>
+    <artifactId>oktask</artifactId>
     <version>1.1.0</version>
-    <name>gestor-tareas</name>
-    <description>Gestor de Tareas Académicas con Pomodoro y Análisis de Horas</description>
+    <name>OKtask</name>
+    <description>OKtask - Gestor de tareas con Pomodoro y análisis de minutos de estudio</description>
 
     <properties>
         <java.version>21</java.version>

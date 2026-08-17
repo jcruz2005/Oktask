@@ -1,6 +1,6 @@
 /**
  * App - Lógica principal de la aplicación
- * Gestor de Tareas Académicas
+ * OKtask
  */
 
 class App {
@@ -193,7 +193,7 @@ class App {
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `gestor-tareas-${Utils.hoy()}.csv`;
+            link.download = `oktask-${Utils.hoy()}.csv`;
             link.click();
 
             Utils.mostrarToast('Éxito', 'Datos exportados correctamente', 'success');

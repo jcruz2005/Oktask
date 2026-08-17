@@ -1,6 +1,6 @@
-# Gestor de Tareas Académicas
+# OKtask
 
-Sistema de gestión de tareas académicas con Pomodoro y análisis de minutos de estudio.
+Gestor de tareas con Pomodoro y análisis de minutos de estudio.
 
 [![Release](https://img.shields.io/badge/Release-v1.1.0-blue.svg)](https://github.com/jcruz2005/academic-gestor/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#licencia)
@@ -60,7 +60,7 @@ La aplicación estará disponible en **http://localhost:8080**
 
 ```bash
 mvn clean package -DskipTests
-java -jar target/gestor-tareas-1.1.0.jar
+java -jar target/oktask-1.1.0.jar
 ```
 
 ---
@@ -113,21 +113,21 @@ chmod +x build-linux.sh
 #### Ejecutar
 
 ```bash
-./target/installers/GestorTareasAcademicas/bin/GestorTareasAcademicas
+./target/installers/OKtask/bin/OKtask
 ```
 
 #### Estructura generada
 
 ```
-target/installers/GestorTareasAcademicas/
+target/installers/OKtask/
 ├── bin/
-│   └── GestorTareasAcademicas      ← ejecutable
+│   └── OKtask              ← ejecutable
 ├── lib/
-│   ├── app/                         ← JAR plano + dependencias
-│   └── runtime/                     ← JRE embebido
+│   ├── app/                ← JAR plano + dependencias
+│   └── runtime/            ← JRE embebido
 └── share/
     └── applications/
-        └── GestorTareasAcademicas.desktop  ← acceso directo
+        └── OKtask.desktop  ← acceso directo
 ```
 
 ---
@@ -157,7 +157,7 @@ build-windows.bat
 #### Ejecutar
 
 ```cmd
-target\installers\GestorTareasAcademicas\GestorTareasAcademicas.exe
+target\installers\OKtask\OKtask.exe
 ```
 
 > **Nota:** Windows puede mostrar una alerta de SmartScreen la primera vez. Hacé clic en **"Más información" → "Ejecutar de todas formas"**.
@@ -165,13 +165,13 @@ target\installers\GestorTareasAcademicas\GestorTareasAcademicas.exe
 #### Estructura generada
 
 ```
-target\installers\GestorTareasAcademicas\
-├── GestorTareasAcademicas.exe      ← ejecutable
-├── GestorTareasAcademicas.ico      ← icono
+target\installers\OKtask\
+├── OKtask.exe              ← ejecutable
+├── OKtask.ico              ← icono
 ├── lib\
-│   ├── app\                        ← JAR plano + dependencias
-│   └── runtime\                    ← JRE embebido
-└── GestorTareasAcademicas\         ← acceso directo en Menú Inicio
+│   ├── app\                ← JAR plano + dependencias
+│   └── runtime\            ← JRE embebido
+└── OKtask\                 ← acceso directo en Menú Inicio
 ```
 
 ---
@@ -207,18 +207,18 @@ chmod +x build-macos.sh
 #### Ejecutar
 
 ```bash
-open target/installers/GestorTareasAcademicas.app
+open target/installers/OKtask.app
 ```
 
 #### Crear instalador `.pkg` (opcional, para distribuir)
 
 ```bash
 pkgbuild \
-  --component target/installers/GestorTareasAcademicas.app \
+  --component target/installers/OKtask.app \
   --install-location /Applications \
-  --identifier com.academic.gestor-tareas \
+  --identifier com.oktask.app \
   --version 1.1.0 \
-  gestor-tareas-1.1.0.pkg
+  oktask-1.1.0.pkg
 ```
 
 > **Apple Silicon (M1/M2/M3):** Si macOS bloquea la ejecución, andá a **Ajustes del Sistema → Privacidad y Seguridad** y hacé clic en **"Permitir"**.
@@ -231,8 +231,8 @@ La aplicación usa **SQLite** (base de datos embebida) que se crea automáticame
 
 | Entorno | Ubicación |
 |---|---|
-| Desarrollo (`mvn spring-boot:run`) | `data/gestor-tareas.db` |
-| App nativa | `~/.gestor-tareas/data/gestor-tareas.db` |
+| Desarrollo (`mvn spring-boot:run`) | `data/oktask.db` |
+| App nativa | `~/.oktask/data/oktask.db` |
 
 **Importante:** La app nativa usa `ddl-auto: update`, por lo que tus materias, tareas y horas de estudio se preservan entre actualizaciones de la aplicación.
 
@@ -314,7 +314,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:sqlite:data/gestor-tareas.db
+    url: jdbc:sqlite:data/oktask.db
     driver-class-name: org.sqlite.JDBC
   jpa:
     hibernate:
@@ -329,7 +329,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:sqlite:${user.home}/.gestor-tareas/data/gestor-tareas.db
+    url: jdbc:sqlite:${user.home}/.oktask/data/oktask.db
   jpa:
     hibernate:
       ddl-auto: update

@@ -3,10 +3,10 @@ server:
 
 spring:
   application:
-    name: gestor-tareas-academicas
+    name: oktask
 
   datasource:
-    url: jdbc:sqlite:data/gestor-tareas.db
+    url: jdbc:sqlite:data/oktask.db
     driver-class-name: org.sqlite.JDBC
 
   jpa:

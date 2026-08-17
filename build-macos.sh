@@ -33,13 +33,13 @@ echo "[OK] JAR compilado"
 # Crear JAR plano preservando metadata de Spring Boot
 echo ""
 echo "[BUILD] Creando JAR plano para jpackage..."
-PLAIN_JAR="$TARGET_DIR/gestor-tareas-jpackage.jar"
+PLAIN_JAR="$TARGET_DIR/oktask-jpackage.jar"
 STAGING="$TARGET_DIR/jpackage-staging"
 rm -rf "$STAGING" "$PLAIN_JAR"
 mkdir -p "$STAGING/app"
 
 echo "[BUILD] Extrayendo fat JAR..."
-(cd "$STAGING" && jar xf "$TARGET_DIR/gestor-tareas-$APP_VERSION.jar")
+(cd "$STAGING" && jar xf "$TARGET_DIR/oktask-$APP_VERSION.jar")
 cp -r "$STAGING/BOOT-INF/classes/"* "$STAGING/app/"
 
 echo "[BUILD] Extrayendo dependencias (excluyendo JavaFX)..."
@@ -137,19 +137,19 @@ echo "[BUILD] Creando app image..."
 rm -rf "$TARGET_DIR/installers"
 jpackage \
     --type app-image \
-    --name "GestorTareasAcademicas" \
+    --name "OKtask" \
     --dest "$TARGET_DIR/installers" \
     --input "$JPACKAGE_INPUT" \
     --main-class com.academic.gestor.NativeLauncher \
-    --main-jar "gestor-tareas-jpackage.jar" \
+    --main-jar "oktask-jpackage.jar" \
     $ICON_PATH \
     --java-options "-Dspring.profiles.active=native" \
     --java-options "-Xmx512m" \
     --app-version "$APP_VERSION" \
-    --vendor "Academic" \
-    --description "Gestor de Tareas Académicas con Pomodoro" \
-    --mac-package-identifier "com.academic.gestor-tareas" \
-    --mac-package-name "Gestor Tareas" 2>&1
+    --vendor "OKtask" \
+    --description "OKtask - Gestor de tareas con Pomodoro" \
+    --mac-package-identifier "com.oktask.app" \
+    --mac-package-name "OKtask" 2>&1
 
 rm -rf "$JPACKAGE_INPUT"
 
@@ -158,12 +158,12 @@ echo "=========================================="
 echo "  BUILD COMPLETADO"
 echo "=========================================="
 echo "[INFO] App image creada en: $TARGET_DIR/installers/"
-echo "[INFO] Para ejecutar: open $TARGET_DIR/installers/GestorTareasAcademicas.app"
+echo "[INFO] Para ejecutar: open $TARGET_DIR/installers/OKtask.app"
 echo ""
 echo "[INFO] Para crear un instalador .pkg:"
-echo "  pkgbuild --component $TARGET_DIR/installers/GestorTareasAcademicas.app \\"
+echo "  pkgbuild --component $TARGET_DIR/installers/OKtask.app \\"
 echo "    --install-location /Applications \\"
-echo "    --identifier com.academic.gestor-tareas \\"
+echo "    --identifier com.oktask.app \\"
 echo "    --version $APP_VERSION \\"
-echo "    gestor-tareas-$APP_VERSION.pkg"
+echo "    oktask-$APP_VERSION.pkg"
 echo ""

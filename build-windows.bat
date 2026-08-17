@@ -44,7 +44,7 @@ echo [OK] JAR compilado
 REM Crear JAR plano preservando metadata de Spring Boot
 echo.
 echo [BUILD] Creando JAR plano para jpackage...
-set "PLAIN_JAR=%TARGET_DIR%\gestor-tareas-jpackage.jar"
+set "PLAIN_JAR=%TARGET_DIR%\oktask-jpackage.jar"
 set "STAGING=%TARGET_DIR%\jpackage-staging"
 if exist "%STAGING%" rmdir /s /q "%STAGING%"
 if exist "%PLAIN_JAR%" del "%PLAIN_JAR%"
@@ -52,7 +52,7 @@ mkdir "%STAGING%\app"
 
 echo [BUILD] Extrayendo fat JAR...
 cd /d "%STAGING%"
-jar xf "%TARGET_DIR%\gestor-tareas-%APP_VERSION%.jar"
+jar xf "%TARGET_DIR%\oktask-%APP_VERSION%.jar"
 xcopy /E /Y /Q "BOOT-INF\classes\*" "%STAGING%\app\" >nul
 
 echo [BUILD] Extrayendo dependencias (excluyendo JavaFX)...
@@ -136,19 +136,19 @@ echo [BUILD] Creando app image...
 if exist "%TARGET_DIR%\installers" rmdir /s /q "%TARGET_DIR%\installers"
 jpackage ^
     --type app-image ^
-    --name "GestorTareasAcademicas" ^
+    --name "OKtask" ^
     --dest "%TARGET_DIR%\installers" ^
     --input "%JPACKAGE_INPUT%" ^
     --main-class com.academic.gestor.NativeLauncher ^
-    --main-jar "gestor-tareas-jpackage.jar" ^
+    --main-jar "oktask-jpackage.jar" ^
     !ICON_OPTION! ^
     --java-options "-Dspring.profiles.active=native" ^
     --java-options "-Xmx512m" ^
     --app-version "%APP_VERSION%" ^
-    --vendor "Academic" ^
-    --description "Gestor de Tareas Académicas con Pomodoro" ^
+    --vendor "OKtask" ^
+    --description "OKtask - Gestor de tareas con Pomodoro" ^
     --win-menu ^
-    --win-menu-group "Academic" ^
+    --win-menu-group "OKtask" ^
     --win-shortcut
 
 if exist "%JPACKAGE_INPUT%" rmdir /s /q "%JPACKAGE_INPUT%"
@@ -157,7 +157,7 @@ echo.
 echo ==========================================
 echo   BUILD COMPLETADO
 echo ==========================================
-echo [INFO] Para ejecutar: %TARGET_DIR%\installers\GestorTareasAcademicas\GestorTareasAcademicas.exe
+echo [INFO] Para ejecutar: %TARGET_DIR%\installers\OKtask\OKtask.exe
 echo.
 
 cd /d "%PROJECT_DIR%"

@@ -33,13 +33,13 @@ echo "[OK] JAR compilado"
 # Crear JAR plano preservando metadata de Spring Boot
 echo ""
 echo "[BUILD] Creando JAR plano para jpackage..."
-PLAIN_JAR="$TARGET_DIR/gestor-tareas-jpackage.jar"
+PLAIN_JAR="$TARGET_DIR/oktask-jpackage.jar"
 STAGING="$TARGET_DIR/jpackage-staging"
 rm -rf "$STAGING" "$PLAIN_JAR"
 mkdir -p "$STAGING/app"
 
 echo "[BUILD] Extrayendo fat JAR..."
-(cd "$STAGING" && jar xf "$TARGET_DIR/gestor-tareas-$APP_VERSION.jar")
+(cd "$STAGING" && jar xf "$TARGET_DIR/oktask-$APP_VERSION.jar")
 cp -r "$STAGING/BOOT-INF/classes/"* "$STAGING/app/"
 
 echo "[BUILD] Extrayendo dependencias (excluyendo JavaFX)..."
@@ -136,25 +136,25 @@ echo "[BUILD] Creando app image..."
 rm -rf "$TARGET_DIR/installers"
 jpackage \
     --type app-image \
-    --name "GestorTareasAcademicas" \
+    --name "OKtask" \
     --dest "$TARGET_DIR/installers" \
     --input "$JPACKAGE_INPUT" \
     --main-class com.academic.gestor.NativeLauncher \
-    --main-jar "gestor-tareas-jpackage.jar" \
+    --main-jar "oktask-jpackage.jar" \
     --java-options "-Dspring.profiles.active=native" \
     --java-options "-Xmx512m" \
     --app-version "$APP_VERSION" \
     --vendor "Academic" \
-    --description "Gestor de Tareas Académicas con Pomodoro" 2>&1
+    --description "OKtask - Gestor de tareas con Pomodoro" 2>&1
 
 rm -rf "$JPACKAGE_INPUT"
 
 # Crear wrapper shell
 echo "[BUILD] Creando launcher wrapper..."
 
-APPDIR="$TARGET_DIR/installers/GestorTareasAcademicas/lib/app"
-RUNTIME_DIR="$TARGET_DIR/installers/GestorTareasAcademicas/lib/runtime"
-LAUNCHER_BIN="$TARGET_DIR/installers/GestorTareasAcademicas/bin/GestorTareasAcademicas"
+APPDIR="$TARGET_DIR/installers/OKtask/lib/app"
+RUNTIME_DIR="$TARGET_DIR/installers/OKtask/lib/runtime"
+LAUNCHER_BIN="$TARGET_DIR/installers/OKtask/bin/OKtask"
 
 mv "$LAUNCHER_BIN" "$LAUNCHER_BIN.jpackage-bin" 2>/dev/null || true
 
@@ -176,7 +176,7 @@ fi
 exec "$JAVA_CMD" \
     --module-path "$MODULE_PATH" \
     --add-modules javafx.controls,javafx.web,javafx.media \
-    -cp "$APPDIR/gestor-tareas-jpackage.jar" \
+    -cp "$APPDIR/oktask-jpackage.jar" \
     -Djava.library.path="$APPDIR" \
     -Dspring.profiles.active=native \
     -Xmx512m \
@@ -192,13 +192,13 @@ echo "=========================================="
 
 # Accesos directos
 echo "[BUILD] Creando accesos directos..."
-DESKTOP_NAME="GestorTareasAcademicas"
+DESKTOP_NAME="OKtask"
 ICON_FILE=""
 [ -f "$PROJECT_DIR/native/icons/app-icon.png" ] && ICON_FILE="$PROJECT_DIR/native/icons/app-icon.png"
 
 DESKTOP_CONTENT="[Desktop Entry]
-Name=Gestor de Tareas Académicas
-Comment=Gestor de Tareas Académicas con Pomodoro y Análisis de Horas
+Name=OKtask
+Comment=OKtask - Gestor de tareas con Pomodoro
 Exec=$LAUNCHER_BIN
 Icon=$ICON_FILE
 Type=Application

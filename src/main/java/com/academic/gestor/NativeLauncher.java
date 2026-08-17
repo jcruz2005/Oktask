@@ -31,7 +31,7 @@ public class NativeLauncher extends Application {
     private static final Logger log = LoggerFactory.getLogger(NativeLauncher.class);
 
     /** Título de la ventana nativa. */
-    private static final String APP_TITLE = "Gestor de Tareas Académicas";
+    private static final String APP_TITLE = "OKtask";
 
     /** Ancho por defecto de la ventana. */
     private static final int DEFAULT_WIDTH = 1200;
@@ -74,7 +74,7 @@ public class NativeLauncher extends Application {
      * @param args argumentos de línea de comandos
      */
     public static void main(String[] args) {
-        log.info("Iniciando Gestor de Tareas Académicas...");
+        log.info("Iniciando OKtask...");
 
         // Crear directorio de datos si no existe
         ensureDataDirectoryExists();
@@ -269,7 +269,7 @@ public class NativeLauncher extends Application {
     private static void ensureDataDirectoryExists() {
         try {
             String userHome = System.getProperty("user.home");
-            Path dataDir = Paths.get(userHome, ".gestor-tareas", "data");
+            Path dataDir = Paths.get(userHome, ".oktask", "data");
 
             if (!Files.exists(dataDir)) {
                 Files.createDirectories(dataDir);

@@ -1,6 +1,6 @@
 /**
  * Notificaciones - Gestión de notificaciones del navegador
- * Gestor de Tareas Académicas
+ * OKtask
  */
 
 class Notificaciones {
