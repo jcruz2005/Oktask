@@ -144,6 +144,11 @@ JPACKAGE_ARGS=(
     --main-jar "oktask-jpackage.jar"
     --java-options "-Dspring.profiles.active=native"
     --java-options "-Xmx512m"
+    --java-options "-XX:+UseG1GC"
+    --java-options "-XX:MaxGCPauseMillis=200"
+    --java-options "-XX:+TieredCompilation"
+    --java-options "-XX:TieredStopAtLevel=1"
+    --java-options "-Djava.awt.headless=true"
     --app-version "$APP_VERSION"
     --vendor "Academic"
     --description "OKtask - Gestor de tareas con Pomodoro"
@@ -204,6 +209,11 @@ exec "$JAVA_CMD" \
     -Djava.library.path="$APPDIR" \
     -Dspring.profiles.active=native \
     -Xmx512m \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
+    -XX:+TieredCompilation \
+    -XX:TieredStopAtLevel=1 \
+    -Djava.awt.headless=true \
     com.academic.gestor.NativeLauncher "$@"
 WRAPPER
 

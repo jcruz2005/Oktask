@@ -1,9 +1,5 @@
 # Profile activo cuando se ejecuta como app nativa
 #
-# Este perfil se activa automáticamente cuando la aplicación
-# se ejecuta como una aplicación de escritorio nativa usando
-# el NativeLauncher con JavaFX WebView.
-#
 # @author OKtask
 # @since 1.1.0
 
@@ -14,8 +10,23 @@ spring:
   application:
     name: oktask
   
+  # Lazy initialization agresiva
+  main:
+    lazy-initialization: true
+    banner-mode: off
+
+  # Deshabilitar auto-configs innecesarias para app de escritorio
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration
+      - org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration
+      - org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration
+      - org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration
+      - org.springframework.boot.autoconfigure.mustache.MustacheAutoConfiguration
+      - org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration
+
   # Configuración de base de datos SQLite
-  # Usa directorio del usuario para persistencia entre sesiones
   datasource:
     url: jdbc:sqlite:${user.home}/.oktask/data/oktask.db
     driver-class-name: org.sqlite.JDBC
@@ -25,11 +36,19 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+    open-in-view: false
 
-# Configuración de logging para producción
+# Logging mínimo
 logging:
   level:
-    root: WARN
+    root: ERROR
     com.academic.gestor: INFO
-    org.springframework: WARN
-    org.hibernate: WARN
+    org.springframework: ERROR
+    org.hibernate: ERROR
+
+# Configuración del Pomodoro
+pomodoro:
+  duracion-trabajo: 25
+  duracion-descanso: 5
+  duracion-descanso-largo: 15
+  pomodoros-para-descanso-largo: 4
