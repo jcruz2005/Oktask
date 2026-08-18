@@ -150,7 +150,7 @@ JPACKAGE_ARGS=(
     --java-options "-XX:TieredStopAtLevel=1"
     --java-options "-Djava.awt.headless=true"
     --app-version "$APP_VERSION"
-    --vendor "Academic"
+    --vendor "OKtask"
     --description "OKtask - Gestor de tareas con Pomodoro"
 )
 
@@ -248,6 +248,11 @@ mkdir -p "$HOME/.local/share/applications"
 echo "$DESKTOP_CONTENT" > "$HOME/.local/share/applications/$DESKTOP_NAME.desktop"
 echo "[OK] Menú de aplicaciones"
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+
+# Crear symlink en ~/.local/bin para ejecutar desde terminal
+mkdir -p "$HOME/.local/bin"
+ln -sf "$LAUNCHER_BIN" "$HOME/.local/bin/oktask"
+echo "[OK] Symlink en ~/.local/bin/oktask"
 
 echo ""
 echo "[INFO] Ejecutar: $LAUNCHER_BIN"

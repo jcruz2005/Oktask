@@ -16,6 +16,12 @@ echo "  BUILD NATIVO PARA macOS"
 echo "=========================================="
 echo ""
 
+# Verificar que es macOS
+if [ "$(uname)" != "Darwin" ]; then
+    echo "[ERROR] Este script solo puede ejecutarse en macOS"
+    exit 1
+fi
+
 # Verificar herramientas
 echo "[BUILD] Verificando herramientas..."
 java -version 2>&1 | grep -q "21" || { echo "[ERROR] Se requiere Java 21"; exit 1; }

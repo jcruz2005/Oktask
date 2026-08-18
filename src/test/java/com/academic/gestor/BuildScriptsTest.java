@@ -160,8 +160,8 @@ class BuildScriptsTest {
             String contenido = Files.readString(scriptPath, StandardCharsets.UTF_8);
 
             // Assert
-            assertTrue(contenido.contains("gestor-tareas-"),
-                    "El script debe buscar el JAR compilado con el nombre gestor-tareas-");
+            assertTrue(contenido.contains("oktask-"),
+                    "El script debe buscar el JAR compilado con el nombre oktask-");
         }
 
         @Test
@@ -174,7 +174,7 @@ class BuildScriptsTest {
             String contenido = Files.readString(scriptPath, StandardCharsets.UTF_8);
 
             // Assert
-            assertTrue(contenido.contains("app-icon.png"),
+            assertTrue(contenido.contains("icon.png"),
                     "El script debe verificar la existencia del icono");
         }
 
@@ -265,8 +265,8 @@ class BuildScriptsTest {
             String contenido = Files.readString(scriptPath, StandardCharsets.UTF_8);
 
             // Assert
-            assertTrue(contenido.contains("--win-menu-group \"Academic\""),
-                    "El script debe configurar --win-menu-group Academic");
+            assertTrue(contenido.contains("--win-menu-group \"OKtask\""),
+                    "El script debe configurar --win-menu-group OKtask");
         }
 
         @Test
@@ -284,7 +284,7 @@ class BuildScriptsTest {
         }
 
         @Test
-        @DisplayName("deberia usar gestor-tareas-1.0.0.jar")
+        @DisplayName("deberia usar oktask-1.1.0.jar")
         void deberiaUsarNombreJarEspecifico() throws IOException {
             // Arrange
             Path scriptPath = Path.of("build-windows.bat");
@@ -293,8 +293,8 @@ class BuildScriptsTest {
             String contenido = Files.readString(scriptPath, StandardCharsets.UTF_8);
 
             // Assert
-            assertTrue(contenido.contains("gestor-tareas-1.0.0.jar"),
-                    "El script debe usar el nombre del JAR gestor-tareas-1.0.0.jar");
+            assertTrue(contenido.contains("oktask-%APP_VERSION%.jar"),
+                    "El script debe usar el nombre del JAR oktask-%APP_VERSION%.jar");
         }
 
         @Test
@@ -372,8 +372,8 @@ class BuildScriptsTest {
             // Assert
             assertTrue(contenido.contains("--mac-package-identifier"),
                     "El script debe configurar --mac-package-identifier");
-            assertTrue(contenido.contains("com.academic.gestor-tareas"),
-                    "El identifier debe ser com.academic.gestor-tareas");
+            assertTrue(contenido.contains("com.oktask.app"),
+                    "El identifier debe ser com.oktask.app");
         }
 
         @Test
@@ -494,7 +494,7 @@ class BuildScriptsTest {
         }
 
         @Test
-        @DisplayName("todos los scripts deben usar app-version 1.0.0")
+        @DisplayName("todos los scripts deben usar app-version 1.1.0")
         void todosLosScriptsDebenUsarAppVersion() throws IOException {
             // Arrange
             String linux = Files.readString(Path.of("build-linux.sh"), StandardCharsets.UTF_8);
@@ -502,13 +502,13 @@ class BuildScriptsTest {
             String macos = Files.readString(Path.of("build-macos.sh"), StandardCharsets.UTF_8);
 
             // Act & Assert
-            assertTrue(linux.contains("--app-version \"1.0.0\""), "Linux: falta version");
-            assertTrue(windows.contains("--app-version \"1.0.0\""), "Windows: falta version");
-            assertTrue(macos.contains("--app-version \"1.0.0\""), "macOS: falta version");
+            assertTrue(linux.contains("APP_VERSION=\"1.1.0\""), "Linux: falta version");
+            assertTrue(windows.contains("APP_VERSION=1.1.0"), "Windows: falta version");
+            assertTrue(macos.contains("APP_VERSION=\"1.1.0\""), "macOS: falta version");
         }
 
         @Test
-        @DisplayName("todos los scripts deben usar vendor Academic")
+        @DisplayName("todos los scripts deben usar vendor OKtask")
         void todosLosScriptsDebenUsarVendor() throws IOException {
             // Arrange
             String linux = Files.readString(Path.of("build-linux.sh"), StandardCharsets.UTF_8);
@@ -516,9 +516,9 @@ class BuildScriptsTest {
             String macos = Files.readString(Path.of("build-macos.sh"), StandardCharsets.UTF_8);
 
             // Act & Assert
-            assertTrue(linux.contains("--vendor \"Academic\""), "Linux: falta vendor");
-            assertTrue(windows.contains("--vendor \"Academic\""), "Windows: falta vendor");
-            assertTrue(macos.contains("--vendor \"Academic\""), "macOS: falta vendor");
+            assertTrue(linux.contains("--vendor \"OKtask\""), "Linux: falta vendor");
+            assertTrue(windows.contains("--vendor \"OKtask\""), "Windows: falta vendor");
+            assertTrue(macos.contains("--vendor \"OKtask\""), "macOS: falta vendor");
         }
 
         @Test
