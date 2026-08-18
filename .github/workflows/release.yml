@@ -21,54 +21,28 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Setup Maven
-        uses: actions/setup-java@v4
+      - name: Cache Maven
+        uses: actions/cache@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
 
-      - name: Install JavaFX (for jpackage)
+      - name: Install JavaFX
         run: |
           sudo apt-get update
           sudo apt-get install -y openjfx
 
-      - name: Build with Maven
-        run: mvn clean package -DskipTests -q
-
-      - name: Create app-image with jpackage
+      - name: Build
         run: |
-          # Extract dependencies
-          mkdir -p jpackage-input
-          cp target/oktask-*.jar jpackage-input/
-          
-          # Copy JavaFX Linux JARs
-          find ~/.m2/repository/org/openjfx -name "*linux*.jar" -exec cp {} jpackage-input/ \; 2>/dev/null || true
-          
-          # Create app-image
-          jpackage \
-            --type app-image \
-            --name "OKtask" \
-            --dest "target/installers" \
-            --input "jpackage-input" \
-            --main-class com.academic.gestor.NativeLauncher \
-            --main-jar "$(ls jpackage-input/oktask-*.jar | head -1)" \
-            --java-options "-Dspring.profiles.active=native" \
-            --java-options "-Xmx512m" \
-            --app-version "${GITHUB_REF_NAME#v}" \
-            --vendor "OKtask" \
-            --description "OKtask - Gestor de tareas con Pomodoro"
-
-      - name: Package as tar.gz
-        run: |
-          cd target/installers
-          tar -czf "../OKtask-${GITHUB_REF_NAME}-linux-x64.tar.gz" OKtask/
+          mvn clean package -DskipTests -q
+          bash build-linux.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-x64
-          path: target/OKtask-${{ github.ref_name }}-linux-x64.tar.gz
+          path: target/OKtask-*-linux-x64.tar.gz
 
   build-windows:
     runs-on: windows-latest
@@ -82,41 +56,17 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Setup Maven
-        uses: actions/setup-java@v4
+      - name: Cache Maven
+        uses: actions/cache@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
 
-      - name: Build with Maven
-        run: mvn clean package -DskipTests -q
-
-      - name: Create MSI installer with jpackage
+      - name: Build
         run: |
-          # Extract dependencies
-          mkdir jpackage-input
-          Copy-Item target\oktask-*.jar jpackage-input\
-          
-          # Copy JavaFX Windows JARs
-          Get-ChildItem -Path "$env:USERPROFILE\.m2\repository\org\openjfx" -Filter "*windows*.jar" -Recurse | Copy-Item -Destination jpackage-input\ -Force
-          
-          # Create MSI
-          jpackage `
-            --type msi `
-            --name "OKtask" `
-            --dest "target/installers" `
-            --input "jpackage-input" `
-            --main-class com.academic.gestor.NativeLauncher `
-            --main-jar (Get-ChildItem jpackage-input\oktask-*.jar | Select-Object -First 1).Name `
-            --java-options "-Dspring.profiles.active=native" `
-            --java-options "-Xmx512m" `
-            --app-version "${GITHUB_REF_NAME#v}" `
-            --vendor "OKtask" `
-            --description "OKtask - Gestor de tareas con Pomodoro" `
-            --win-menu `
-            --win-shortcut
-        shell: pwsh
+          mvn clean package -DskipTests -q
+          cmd /c build-windows.bat
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -136,38 +86,17 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Setup Maven
-        uses: actions/setup-java@v4
+      - name: Cache Maven
+        uses: actions/cache@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
 
-      - name: Build with Maven
-        run: mvn clean package -DskipTests -q
-
-      - name: Create DMG with jpackage
+      - name: Build
         run: |
-          # Extract dependencies
-          mkdir -p jpackage-input
-          cp target/oktask-*.jar jpackage-input/
-          
-          # Copy JavaFX macOS JARs
-          find ~/.m2/repository/org/openjfx -name "*mac*.jar" -exec cp {} jpackage-input/ \; 2>/dev/null || true
-          
-          # Create DMG
-          jpackage \
-            --type dmg \
-            --name "OKtask" \
-            --dest "target/installers" \
-            --input "jpackage-input" \
-            --main-class com.academic.gestor.NativeLauncher \
-            --main-jar "$(ls jpackage-input/oktask-*.jar | head -1)" \
-            --java-options "-Dspring.profiles.active=native" \
-            --java-options "-Xmx512m" \
-            --app-version "${GITHUB_REF_NAME#v}" \
-            --vendor "OKtask" \
-            --description "OKtask - Gestor de tareas con Pomodoro"
+          mvn clean package -DskipTests -q
+          bash build-macos.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
