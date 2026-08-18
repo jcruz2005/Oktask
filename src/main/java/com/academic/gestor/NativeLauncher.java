@@ -64,7 +64,7 @@ public class NativeLauncher extends Application {
     private static final String SERVER_URL = "http://localhost:" + SERVER_PORT;
     private static final String CSS_RESOURCE = "/native-window.css";
 
-    private static final String APP_VERSION = "1.1.0";
+    private static final String APP_VERSION = "1.2.0";
 
     private WebView webView;
     private WebEngine webEngine;
