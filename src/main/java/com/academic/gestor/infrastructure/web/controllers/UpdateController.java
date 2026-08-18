@@ -60,6 +60,19 @@ public class UpdateController {
                     response.put("releaseDate", info.getReleaseDate());
                     response.put("changelog", info.getChangelog());
                     response.put("downloadUrl", info.getDownloadUrl());
+
+                    // Agregar info de descarga por plataforma
+                    Map<String, Object> downloads = new HashMap<>();
+                    for (Map.Entry<String, UpdateInfo.DownloadInfo> entry : info.getDownloads().entrySet()) {
+                        Map<String, String> dlInfo = new HashMap<>();
+                        dlInfo.put("url", entry.getValue().getUrl());
+                        dlInfo.put("filename", entry.getValue().getFilename());
+                        dlInfo.put("installCommand", entry.getValue().getInstallCommand());
+                        downloads.put(entry.getKey(), dlInfo);
+                    }
+                    response.put("downloads", downloads);
+                    response.put("currentPlatform", UpdateInfo.detectOS());
+
                     log.info("Actualización disponible: v{}", info.getVersion());
                 }
             }

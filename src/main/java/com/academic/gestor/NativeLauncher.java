@@ -188,8 +188,8 @@ public class NativeLauncher extends Application {
                     public void onUpdateAvailable(UpdateInfo info) {
                         Platform.runLater(() -> {
                             UpdateToast toast = new UpdateToast(() -> {
-                                UpdatePanel panel = new UpdatePanel();
-                                panel.show(info);
+                                UpdatePanel panel = new UpdatePanel(info);
+                                panel.show();
                             });
                             toast.show(info);
                         });

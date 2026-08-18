@@ -153,12 +153,13 @@ class UpdateInfoTest {
         }
 
         @Test
-        @DisplayName("UpdateInfo sin URL no es válido")
-        void invalidWithoutUrl() {
+        @DisplayName("UpdateInfo sin URL global es válido (usa downloads por plataforma)")
+        void validWithoutUrlIfHasPlatformDownloads() {
             UpdateInfo info = new UpdateInfo();
             info.setVersion("1.2.0");
 
-            assertFalse(info.isValid());
+            // Con downloads por plataforma, no se necesita URL global
+            assertTrue(info.isValid());
         }
 
         @Test

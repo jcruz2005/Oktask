@@ -8,6 +8,22 @@
     "Ícono nativo de la aplicación",
     "Notificaciones pomodoro always-on-top"
   ],
-  "downloadUrl": "https://github.com/jcruz2005/academic-gestor/releases/latest",
+  "downloads": {
+    "linux": {
+      "url": "https://github.com/jcruz2005/academic-gestor/releases/download/v1.1.0/OKtask-1.1.0-linux-x64.tar.gz",
+      "filename": "OKtask-1.1.0-linux-x64.tar.gz",
+      "installCommand": "tar -xzf OKtask-1.1.0-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
+    },
+    "windows": {
+      "url": "https://github.com/jcruz2005/academic-gestor/releases/download/v1.1.0/OKtask-1.1.0.msi",
+      "filename": "OKtask-1.1.0.msi",
+      "installCommand": ""
+    },
+    "macos": {
+      "url": "https://github.com/jcruz2005/academic-gestor/releases/download/v1.1.0/OKtask-1.1.0.dmg",
+      "filename": "OKtask-1.1.0.dmg",
+      "installCommand": ""
+    }
+  },
   "minVersion": "1.0.0"
 }

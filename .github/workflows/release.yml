@@ -4,7 +4,9 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-linux:
@@ -13,25 +15,60 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build with Maven
-        run: mvn clean package -Dmaven.test.skip=true -q
+      - name: Setup Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Build Linux Installer
+      - name: Install JavaFX (for jpackage)
         run: |
-          chmod +x build-linux.sh
-          ./build-linux.sh
+          sudo apt-get update
+          sudo apt-get install -y openjfx
 
-      - name: Upload Linux Artifacts
+      - name: Build with Maven
+        run: mvn clean package -DskipTests -q
+
+      - name: Create app-image with jpackage
+        run: |
+          # Extract dependencies
+          mkdir -p jpackage-input
+          cp target/oktask-*.jar jpackage-input/
+          
+          # Copy JavaFX Linux JARs
+          find ~/.m2/repository/org/openjfx -name "*linux*.jar" -exec cp {} jpackage-input/ \; 2>/dev/null || true
+          
+          # Create app-image
+          jpackage \
+            --type app-image \
+            --name "OKtask" \
+            --dest "target/installers" \
+            --input "jpackage-input" \
+            --main-class com.academic.gestor.NativeLauncher \
+            --main-jar "$(ls jpackage-input/oktask-*.jar | head -1)" \
+            --java-options "-Dspring.profiles.active=native" \
+            --java-options "-Xmx512m" \
+            --app-version "${GITHUB_REF_NAME#v}" \
+            --vendor "OKtask" \
+            --description "OKtask - Gestor de tareas con Pomodoro"
+
+      - name: Package as tar.gz
+        run: |
+          cd target/installers
+          tar -czf "../OKtask-${GITHUB_REF_NAME}-linux-x64.tar.gz" OKtask/
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-installers
-          path: target/installers/
+          name: linux-x64
+          path: target/OKtask-${{ github.ref_name }}-linux-x64.tar.gz
 
   build-windows:
     runs-on: windows-latest
@@ -39,23 +76,53 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Setup Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
       - name: Build with Maven
-        run: mvn clean package -Dmaven.test.skip=true -q
+        run: mvn clean package -DskipTests -q
 
-      - name: Build Windows Installer
-        run: build-windows.bat
+      - name: Create MSI installer with jpackage
+        run: |
+          # Extract dependencies
+          mkdir jpackage-input
+          Copy-Item target\oktask-*.jar jpackage-input\
+          
+          # Copy JavaFX Windows JARs
+          Get-ChildItem -Path "$env:USERPROFILE\.m2\repository\org\openjfx" -Filter "*windows*.jar" -Recurse | Copy-Item -Destination jpackage-input\ -Force
+          
+          # Create MSI
+          jpackage `
+            --type msi `
+            --name "OKtask" `
+            --dest "target/installers" `
+            --input "jpackage-input" `
+            --main-class com.academic.gestor.NativeLauncher `
+            --main-jar (Get-ChildItem jpackage-input\oktask-*.jar | Select-Object -First 1).Name `
+            --java-options "-Dspring.profiles.active=native" `
+            --java-options "-Xmx512m" `
+            --app-version "${GITHUB_REF_NAME#v}" `
+            --vendor "OKtask" `
+            --description "OKtask - Gestor de tareas con Pomodoro" `
+            --win-menu `
+            --win-shortcut
+        shell: pwsh
 
-      - name: Upload Windows Artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-installers
-          path: target/installers/
+          name: windows-x64
+          path: target/installers/OKtask-*.msi
 
   build-macos:
     runs-on: macos-latest
@@ -63,58 +130,63 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Setup Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
       - name: Build with Maven
-        run: mvn clean package -Dmaven.test.skip=true -q
+        run: mvn clean package -DskipTests -q
 
-      - name: Build macOS Installer
+      - name: Create DMG with jpackage
         run: |
-          chmod +x build-macos.sh
-          ./build-macos.sh
+          # Extract dependencies
+          mkdir -p jpackage-input
+          cp target/oktask-*.jar jpackage-input/
+          
+          # Copy JavaFX macOS JARs
+          find ~/.m2/repository/org/openjfx -name "*mac*.jar" -exec cp {} jpackage-input/ \; 2>/dev/null || true
+          
+          # Create DMG
+          jpackage \
+            --type dmg \
+            --name "OKtask" \
+            --dest "target/installers" \
+            --input "jpackage-input" \
+            --main-class com.academic.gestor.NativeLauncher \
+            --main-jar "$(ls jpackage-input/oktask-*.jar | head -1)" \
+            --java-options "-Dspring.profiles.active=native" \
+            --java-options "-Xmx512m" \
+            --app-version "${GITHUB_REF_NAME#v}" \
+            --vendor "OKtask" \
+            --description "OKtask - Gestor de tareas con Pomodoro"
 
-      - name: Upload macOS Artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-installers
-          path: target/installers/
+          name: macos-arm64
+          path: target/installers/OKtask-*.dmg
 
   release:
     needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    permissions:
-      contents: write
     steps:
-      - name: Download Linux Artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
-        with:
-          name: linux-installers
-          path: release/linux
-
-      - name: Download Windows Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-installers
-          path: release/windows
-
-      - name: Download macOS Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-installers
-          path: release/macos
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
           files: |
-            release/linux/*
-            release/windows/*
-            release/macos/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            linux-x64/OKtask-*.tar.gz
+            windows-x64/OKtask-*.msi
+            macos-arm64/OKtask-*.dmg
+          generate_release_notes: true

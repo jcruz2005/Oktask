@@ -153,6 +153,11 @@ class UpdateChecker {
 
         const data = this.updateInfo;
         const changelog = data.changelog || [];
+        const platform = data.currentPlatform || 'linux';
+        const platformName = platform === 'windows' ? 'Windows' : platform === 'macos' ? 'macOS' : 'Linux';
+        const platformDl = data.downloads?.[platform];
+        const downloadUrl = platformDl?.url || data.downloadUrl;
+        const installCmd = platformDl?.installCommand || '';
 
         // Crear modal
         this.modal = document.createElement('div');
@@ -166,6 +171,7 @@ class UpdateChecker {
                         <div>
                             <h2>Nueva Versión Disponible</h2>
                             <p>v${data.version} ${data.releaseDate ? '(' + data.releaseDate + ')' : ''}</p>
+                            <p style="font-size: 12px; color: #aaa; margin-top: 4px;">Paquete para: ${platformName}</p>
                         </div>
                     </div>
                 </div>
@@ -175,6 +181,12 @@ class UpdateChecker {
                     <ul class="update-changelog">
                         ${changelog.map(item => `<li>${item}</li>`).join('')}
                     </ul>
+                    ${installCmd ? `
+                    <div style="margin-top: 15px;">
+                        <h3>Instalación:</h3>
+                        <code style="display: block; background: #1a1a2e; color: #00d4aa; padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap;">${installCmd}</code>
+                    </div>
+                    ` : ''}
                 </div>
                 
                 <div class="update-modal-footer">
@@ -182,7 +194,7 @@ class UpdateChecker {
                         Cerrar
                     </button>
                     <button class="btn-update-download" onclick="updateChecker.openDownload()">
-                        Descargar Actualización
+                        Descargar para ${platformName}
                     </button>
                 </div>
             </div>
@@ -360,11 +372,17 @@ class UpdateChecker {
     }
 
     /**
-     * Abre la URL de descarga
+     * Abre la URL de descarga para la plataforma actual
      */
     openDownload() {
-        if (this.updateInfo?.downloadUrl) {
-            window.open(this.updateInfo.downloadUrl, '_blank');
+        if (!this.updateInfo) return;
+
+        const platform = this.updateInfo.currentPlatform || 'linux';
+        const platformDl = this.updateInfo.downloads?.[platform];
+        const url = platformDl?.url || this.updateInfo.downloadUrl;
+
+        if (url) {
+            window.open(url, '_blank');
         }
         this.closeModal();
     }

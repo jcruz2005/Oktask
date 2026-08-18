@@ -222,6 +222,32 @@ public class UpdateChecker {
                     info.setChangelog(changelog);
                 }
 
+                // Parsear downloads por plataforma
+                JsonNode downloadsNode = root.path("downloads");
+                if (downloadsNode.isObject()) {
+                    java.util.Map<String, UpdateInfo.DownloadInfo> downloads = new java.util.HashMap<>();
+                    for (String os : new String[]{"linux", "windows", "macos"}) {
+                        JsonNode osNode = downloadsNode.path(os);
+                        if (osNode.isObject()) {
+                            UpdateInfo.DownloadInfo dlInfo = new UpdateInfo.DownloadInfo();
+                            dlInfo.setUrl(osNode.path("url").asText(null));
+                            dlInfo.setFilename(osNode.path("filename").asText(null));
+                            dlInfo.setInstallCommand(osNode.path("installCommand").asText(null));
+                            downloads.put(os, dlInfo);
+                        }
+                    }
+                    info.setDownloads(downloads);
+
+                    // Establecer downloadUrl basado en la plataforma actual si no hay URL genérica
+                    if (info.getDownloadUrl() == null) {
+                        String os = UpdateInfo.detectOS();
+                        UpdateInfo.DownloadInfo platformDl = downloads.get(os);
+                        if (platformDl != null) {
+                            info.setDownloadUrl(platformDl.getUrl());
+                        }
+                    }
+                }
+
                 return info;
             }
 

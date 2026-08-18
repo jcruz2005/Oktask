@@ -2,50 +2,29 @@ package com.academic.gestor.update;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
  * Modelo de datos para la información de una versión de la aplicación.
- *
- * <p>Representa los datos parseados desde el archivo version.json
- * ubicado en el repositorio de GitHub.</p>
  *
  * @author OKtask
  * @since 1.2.0
  */
 public class UpdateInfo {
 
-    /** Versión de la aplicación en formato semver (MAJOR.MINOR.PATCH). */
     private String version;
-
-    /** Fecha de release en formato ISO (YYYY-MM-DD). */
     private String releaseDate;
-
-    /** Lista de cambios de la versión. */
     private List<String> changelog;
-
-    /** URL de descarga del instalador. */
     private String downloadUrl;
-
-    /** Versión mínima compatible con esta actualización. */
     private String minVersion;
+    private Map<String, DownloadInfo> downloads;
 
-    /**
-     * Constructor por defecto.
-     */
     public UpdateInfo() {
         this.changelog = Collections.emptyList();
+        this.downloads = Collections.emptyMap();
     }
 
-    /**
-     * Constructor con todos los campos.
-     *
-     * @param version     versión en formato semver
-     * @param releaseDate fecha de release
-     * @param changelog   lista de cambios
-     * @param downloadUrl URL de descarga
-     * @param minVersion  versión mínima compatible
-     */
     public UpdateInfo(String version, String releaseDate, List<String> changelog,
                       String downloadUrl, String minVersion) {
         this.version = version;
@@ -53,6 +32,7 @@ public class UpdateInfo {
         this.changelog = changelog != null ? changelog : Collections.emptyList();
         this.downloadUrl = downloadUrl;
         this.minVersion = minVersion;
+        this.downloads = Collections.emptyMap();
     }
 
     public String getVersion() { return version; }
@@ -72,12 +52,33 @@ public class UpdateInfo {
     public String getMinVersion() { return minVersion; }
     public void setMinVersion(String minVersion) { this.minVersion = minVersion; }
 
+    public Map<String, DownloadInfo> getDownloads() { return downloads; }
+    public void setDownloads(Map<String, DownloadInfo> downloads) {
+        this.downloads = downloads != null ? downloads : Collections.emptyMap();
+    }
+
     /**
-     * Compara esta versión con otra usando Semantic Versioning.
+     * Obtiene la información de descarga para la plataforma actual.
      *
-     * @param other versión a comparar (formato "X.Y.Z")
-     * @return -1 si esta versión es menor, 0 si son iguales, 1 si es mayor
+     * @return DownloadInfo para la plataforma, o null si no hay
      */
+    public DownloadInfo getDownloadForCurrentPlatform() {
+        String os = detectOS();
+        return downloads.get(os);
+    }
+
+    /**
+     * Detecta el sistema operativo actual.
+     *
+     * @return "linux", "windows" o "macos"
+     */
+    public static String detectOS() {
+        String os = System.getProperty("os.name", "").toLowerCase();
+        if (os.contains("win")) return "windows";
+        if (os.contains("mac") || os.contains("darwin")) return "macos";
+        return "linux";
+    }
+
     public int compareTo(String other) {
         if (other == null) return 1;
 
@@ -97,15 +98,8 @@ public class UpdateInfo {
         return 0;
     }
 
-    /**
-     * Parsea una parte de la versión manejando pre-release labels.
-     *
-     * @param part parte de la versión (ej: "0", "1", "2-beta")
-     * @return valor numérico para comparación
-     */
     private int parseVersionPart(String part) {
         if (part == null || part.isEmpty()) return 0;
-        // Tomar solo la parte numérica antes de cualquier guión
         String numeric = part.split("-")[0];
         try {
             return Integer.parseInt(numeric);
@@ -114,14 +108,8 @@ public class UpdateInfo {
         }
     }
 
-    /**
-     * Verifica si esta información de actualización es válida.
-     *
-     * @return true si tiene versión y URL de descarga
-     */
     public boolean isValid() {
-        return version != null && !version.isEmpty()
-                && downloadUrl != null && !downloadUrl.isEmpty();
+        return version != null && !version.isEmpty();
     }
 
     @Override
@@ -140,5 +128,31 @@ public class UpdateInfo {
     @Override
     public String toString() {
         return "UpdateInfo{version='" + version + "', releaseDate='" + releaseDate + "'}";
+    }
+
+    /**
+     * Modelo para información de descarga por plataforma.
+     */
+    public static class DownloadInfo {
+        private String url;
+        private String filename;
+        private String installCommand;
+
+        public DownloadInfo() {}
+
+        public DownloadInfo(String url, String filename, String installCommand) {
+            this.url = url;
+            this.filename = filename;
+            this.installCommand = installCommand;
+        }
+
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+
+        public String getFilename() { return filename; }
+        public void setFilename(String filename) { this.filename = filename; }
+
+        public String getInstallCommand() { return installCommand; }
+        public void setInstallCommand(String installCommand) { this.installCommand = installCommand; }
     }
 }

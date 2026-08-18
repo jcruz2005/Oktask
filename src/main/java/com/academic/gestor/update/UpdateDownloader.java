@@ -1,264 +1,167 @@
 package com.academic.gestor.update;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
- * Servicio de descarga de actualizaciones con progreso.
- *
- * <p>Descarga el instalador desde la URL proporcionada y reporta
- * el progreso a un listener.</p>
+ * Descargador de actualizaciones con soporte multiplataforma.
+ * Descarga el paquete correcto según el sistema operativo.
  *
  * @author OKtask
  * @since 1.2.0
  */
 public class UpdateDownloader {
 
-    private static final Logger log = LoggerFactory.getLogger(UpdateDownloader.class);
-
-    /** Directorio donde se almacenan las descargas. */
-    private static final String DOWNLOAD_DIR = ".oktask/updates";
-
-    /** Timeout de conexión en milisegundos. */
     private static final int CONNECT_TIMEOUT_MS = 10000;
-
-    /** Timeout de lectura en milisegundos. */
     private static final int READ_TIMEOUT_MS = 30000;
-
-    /** Tamaño del buffer de lectura. */
     private static final int BUFFER_SIZE = 8192;
 
-    /** Listener de progreso. */
-    private ProgressListener listener;
-
-    /** Flag para cancelar la descarga. */
+    private DownloadProgressListener listener;
     private volatile boolean cancelled = false;
 
-    /** Conexión HTTP actual (para poder cancelar). */
-    private volatile HttpURLConnection currentConnection;
-
-    /**
-     * Interfaz para recibir actualizaciones de progreso.
-     */
-    public interface ProgressListener {
-        /**
-         * Called when download starts.
-         *
-         * @param totalBytes total bytes to download (-1 if unknown)
-         */
-        void onDownloadStarted(long totalBytes);
-
-        /**
-         * Called when progress is updated.
-         *
-         * @param bytesDownloaded bytes downloaded so far
-         * @param totalBytes total bytes to download (-1 if unknown)
-         * @param percentage percentage complete (0-100)
-         */
-        void onProgressUpdate(long bytesDownloaded, long totalBytes, int percentage);
-
-        /**
-         * Called when download completes.
-         *
-         * @param filePath path to the downloaded file
-         */
-        void onDownloadComplete(String filePath);
-
-        /**
-         * Called when download fails.
-         *
-         * @param error error message
-         */
-        void onDownloadFailed(String error);
-
-        /**
-         * Called when download is cancelled.
-         */
-        void onDownloadCancelled();
-    }
-
-    /**
-     * Constructor.
-     */
     public UpdateDownloader() {
+        this.listener = null;
     }
 
-    /**
-     * Establece el listener de progreso.
-     *
-     * @param listener el listener a configurar
-     */
-    public void setListener(ProgressListener listener) {
+    public UpdateDownloader(DownloadProgressListener listener) {
         this.listener = listener;
     }
 
+    public void setListener(DownloadProgressListener listener) {
+        this.listener = listener;
+    }
+
+    public void cancel() {
+        this.cancelled = true;
+    }
+
     /**
-     * Descarga un archivo desde la URL proporcionada.
+     * Descarga la actualización correcta para la plataforma actual.
      *
-     * @param urlStr URL de descarga
-     * @param fileName nombre del archivo local
-     * @return ruta completa del archivo descargado, o null si falló
+     * @param info información de la actualización
+     * @param targetDir directorio destino para la descarga
+     * @return archivo descargado, o null si hubo error o cancelación
      */
-    public String download(String urlStr, String fileName) {
-        cancelled = false;
-        InputStream inputStream = null;
-        FileOutputStream outputStream = null;
+    public File downloadForCurrentPlatform(UpdateInfo info, File targetDir) throws Exception {
+        if (info == null || !info.isValid()) {
+            throw new IllegalArgumentException("Información de actualización inválida");
+        }
 
+        String os = UpdateInfo.detectOS();
+        UpdateInfo.DownloadInfo downloadInfo = info.getDownloads().get(os);
+
+        if (downloadInfo == null || downloadInfo.getUrl() == null) {
+            throw new IllegalStateException("No hay descarga disponible para " + os);
+        }
+
+        return download(downloadInfo.getUrl(), downloadInfo.getFilename(), targetDir);
+    }
+
+    /**
+     * Descarga un archivo desde una URL con seguimiento de progreso.
+     *
+     * @param urlString URL de descarga
+     * @param filename nombre del archivo destino
+     * @param targetDir directorio destino
+     * @return archivo descargado, o null si hubo error o cancelación
+     */
+    public File download(String urlString, String filename, File targetDir) throws Exception {
+        if (urlString == null || urlString.isEmpty()) {
+            throw new IllegalArgumentException("URL de descarga no válida");
+        }
+
+        if (!targetDir.exists()) {
+            targetDir.mkdirs();
+        }
+
+        File outputFile = new File(targetDir, filename);
+
+        HttpURLConnection connection = null;
         try {
-            // Crear directorio de descargas
-            String userHome = System.getProperty("user.home");
-            Path downloadDir = Paths.get(userHome, DOWNLOAD_DIR);
-            if (!Files.exists(downloadDir)) {
-                Files.createDirectories(downloadDir);
-            }
+            URL url = new URL(urlString);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            connection.setReadTimeout(READ_TIMEOUT_MS);
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "OKtask-UpdateDownloader/1.0");
+            connection.setInstanceFollowRedirects(false);
 
-            File outputFile = downloadDir.resolve(fileName).toFile();
-            log.info("Descargando {} a {}", urlStr, outputFile.getAbsolutePath());
+            int responseCode = connection.getResponseCode();
 
-            // Conectar
-            URL url = new URL(urlStr);
-            currentConnection = (HttpURLConnection) url.openConnection();
-            currentConnection.setConnectTimeout(CONNECT_TIMEOUT_MS);
-            currentConnection.setReadTimeout(READ_TIMEOUT_MS);
-            currentConnection.setRequestMethod("GET");
-            currentConnection.setRequestProperty("User-Agent", "OKtask-Updater/1.0");
-            currentConnection.setInstanceFollowRedirects(true);
-
-            int responseCode = currentConnection.getResponseCode();
-
-            // Manejar redirecciones
-            if (responseCode == 301 || responseCode == 302 || responseCode == 307) {
-                String newUrl = currentConnection.getHeaderField("Location");
+            // Manejar redirecciones (302, 301)
+            if (responseCode == 301 || responseCode == 302) {
+                String newUrl = connection.getHeaderField("Location");
                 if (newUrl != null) {
-                    currentConnection.disconnect();
-                    currentConnection = (HttpURLConnection) new URL(newUrl).openConnection();
-                    currentConnection.setConnectTimeout(CONNECT_TIMEOUT_MS);
-                    currentConnection.setReadTimeout(READ_TIMEOUT_MS);
-                    currentConnection.setRequestProperty("User-Agent", "OKtask-Updater/1.0");
-                    responseCode = currentConnection.getResponseCode();
+                    connection.disconnect();
+                    url = new URL(newUrl);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+                    connection.setReadTimeout(READ_TIMEOUT_MS);
+                    connection.setRequestMethod("GET");
+                    connection.setRequestProperty("User-Agent", "OKtask-UpdateDownloader/1.0");
+                    responseCode = connection.getResponseCode();
                 }
             }
 
             if (responseCode != 200) {
-                String error = "Error HTTP " + responseCode;
-                log.error(error);
-                notifyFailed(error);
-                return null;
+                throw new Exception("Error HTTP " + responseCode + " al descargar");
             }
 
-            // Obtener tamaño total
-            long totalBytes = currentConnection.getContentLengthLong();
-            log.info("Tamaño del archivo: {} bytes", totalBytes);
-
-            notifyStarted(totalBytes);
-
-            // Descargar
-            inputStream = currentConnection.getInputStream();
-            outputStream = new FileOutputStream(outputFile);
-
-            byte[] buffer = new byte[BUFFER_SIZE];
-            long bytesDownloaded = 0;
-            int bytesRead;
-            int lastPercentage = 0;
-
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                if (cancelled) {
-                    log.info("Descarga cancelada");
-                    notifyCancelled();
-                    // Limpiar archivo parcial
-                    outputFile.delete();
-                    return null;
-                }
-
-                outputStream.write(buffer, 0, bytesRead);
-                bytesDownloaded += bytesRead;
-
-                // Calcular porcentaje
-                int percentage = 0;
-                if (totalBytes > 0) {
-                    percentage = (int) ((bytesDownloaded * 100) / totalBytes);
-                }
-
-                // Notificar progreso solo si cambió
-                if (percentage > lastPercentage) {
-                    lastPercentage = percentage;
-                    notifyProgress(bytesDownloaded, totalBytes, percentage);
-                }
+            long totalBytes = connection.getContentLengthLong();
+            if (totalBytes <= 0) {
+                totalBytes = -1; // Desconocido
             }
 
-            outputStream.flush();
-            outputStream.close();
-            outputStream = null;
+            try (InputStream is = connection.getInputStream();
+                 FileOutputStream fos = new FileOutputStream(outputFile)) {
 
-            log.info("Descarga completada: {} bytes", bytesDownloaded);
-            notifyComplete(outputFile.getAbsolutePath());
+                byte[] buffer = new byte[BUFFER_SIZE];
+                long downloadedBytes = 0;
+                int bytesRead;
 
-            return outputFile.getAbsolutePath();
+                while ((bytesRead = is.read(buffer)) != -1) {
+                    if (cancelled) {
+                        fos.close();
+                        outputFile.delete();
+                        return null;
+                    }
 
-        } catch (Exception e) {
-            log.error("Error durante la descarga: {}", e.getMessage());
-            notifyFailed("Error de descarga: " + e.getMessage());
-            return null;
+                    fos.write(buffer, 0, bytesRead);
+                    downloadedBytes += bytesRead;
+
+                    if (listener != null) {
+                        int progress = totalBytes > 0
+                                ? (int) ((downloadedBytes * 100) / totalBytes)
+                                : -1;
+                        listener.onProgress(progress, downloadedBytes, totalBytes);
+                    }
+                }
+
+                fos.flush();
+            }
+
+            if (listener != null) {
+                listener.onComplete(outputFile);
+            }
+
+            return outputFile;
 
         } finally {
-            if (inputStream != null) {
-                try { inputStream.close(); } catch (Exception ignored) {}
-            }
-            if (outputStream != null) {
-                try { outputStream.close(); } catch (Exception ignored) {}
-            }
-            if (currentConnection != null) {
-                currentConnection.disconnect();
+            if (connection != null) {
+                connection.disconnect();
             }
         }
     }
 
     /**
-     * Cancela la descarga en curso.
+     * Interfaz para escuchar el progreso de descarga.
      */
-    public void cancel() {
-        cancelled = true;
-        if (currentConnection != null) {
-            currentConnection.disconnect();
-        }
-    }
-
-    /**
-     * Obtiene el directorio de descargas.
-     *
-     * @return ruta del directorio de descargas
-     */
-    public String getDownloadDirectory() {
-        String userHome = System.getProperty("user.home");
-        return Paths.get(userHome, DOWNLOAD_DIR).toString();
-    }
-
-    private void notifyStarted(long totalBytes) {
-        if (listener != null) listener.onDownloadStarted(totalBytes);
-    }
-
-    private void notifyProgress(long downloaded, long total, int percentage) {
-        if (listener != null) listener.onProgressUpdate(downloaded, total, percentage);
-    }
-
-    private void notifyComplete(String filePath) {
-        if (listener != null) listener.onDownloadComplete(filePath);
-    }
-
-    private void notifyFailed(String error) {
-        if (listener != null) listener.onDownloadFailed(error);
-    }
-
-    private void notifyCancelled() {
-        if (listener != null) listener.onDownloadCancelled();
+    public interface DownloadProgressListener {
+        void onProgress(int percent, long downloaded, long total);
+        void onComplete(File file);
+        default void onError(Exception e) {}
     }
 }
