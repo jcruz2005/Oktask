@@ -68,6 +68,8 @@ public class EstadisticaController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) final LocalDate fechaFin) {
         log.info("GET /api/estadisticas/horas/periodo - Desde {} hasta {}", fechaInicio, fechaFin);
 
+        validarRangoFechas(fechaInicio, fechaFin);
+
         final List<EstadisticaResponse> estadisticas = estadisticaService.obtenerHorasPorPeriodo(
                 fechaInicio, fechaFin
         ).stream()
@@ -112,6 +114,8 @@ public class EstadisticaController {
         final LocalDate inicio = fechaInicio != null ? fechaInicio : LocalDate.now().withDayOfMonth(1);
         final LocalDate fin = fechaFin != null ? fechaFin : LocalDate.now();
 
+        validarRangoFechas(inicio, fin);
+
         final double totalHoras = estadisticaService.obtenerTotalHorasPeriodo(inicio, fin);
         final long totalPomodoros = estadisticaService.obtenerTotalPomodorosPeriodo(inicio, fin);
 
@@ -123,6 +127,24 @@ public class EstadisticaController {
         resumen.put("promedioHorasDiarias", totalHoras / Math.max(1, java.time.temporal.ChronoUnit.DAYS.between(inicio, fin) + 1));
 
         return ResponseEntity.ok(resumen);
+    }
+
+    /**
+     * Valida que la fecha de inicio no sea posterior a la fecha de fin.
+     *
+     * @param fechaInicio fecha de inicio del período
+     * @param fechaFin fecha de fin del período
+     * @throws IllegalArgumentException si el rango es inválido
+     */
+    private void validarRangoFechas(final LocalDate fechaInicio, final LocalDate fechaFin) {
+        if (fechaInicio == null || fechaFin == null) {
+            throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias");
+        }
+        if (fechaInicio.isAfter(fechaFin)) {
+            throw new IllegalArgumentException(
+                    "La fecha de inicio no puede ser posterior a la fecha de fin"
+            );
+        }
     }
 
     /**

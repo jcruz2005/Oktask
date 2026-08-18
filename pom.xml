@@ -13,7 +13,7 @@
 
     <groupId>com.academic</groupId>
     <artifactId>oktask</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <name>OKtask</name>
     <description>OKtask - Gestor de tareas con Pomodoro y análisis de minutos de estudio</description>
 
@@ -91,10 +91,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <mainClass>com.academic.gestor.NativeLauncher</mainClass>
-                    <name>GestorTareasAcademicas</name>
+                    <name>OKtask</name>
                     <appVersion>${project.version}</appVersion>
-                    <vendor>Academic</vendor>
-                    <description>Sistema de Gestión de Tareas Académicas</description>
+                    <vendor>OKtask</vendor>
+                    <description>OKtask - Gestor de tareas con Pomodoro y análisis de minutos de estudio</description>
                 </configuration>
             </plugin>
         </plugins>

@@ -88,7 +88,7 @@ class Materias {
                 <div class="materia-card-color" style="background-color: ${materia.color}"></div>
                 <div class="materia-card-body">
                     <div class="materia-card-header">
-                        <span class="materia-card-codigo">${materia.codigo}</span>
+                        <span class="materia-card-codigo">${Utils.escapeHtml(materia.codigo)}</span>
                         <div class="materia-card-actions">
                             <button class="btn btn-sm btn-outline-secondary" onclick="materias.abrirModalEditar('${materia.id}')" title="Editar">
                                 <i class="fas fa-edit"></i>
@@ -98,10 +98,10 @@ class Materias {
                             </button>
                         </div>
                     </div>
-                    <h3 class="materia-card-nombre">${materia.nombre}</h3>
+                    <h3 class="materia-card-nombre">${Utils.escapeHtml(materia.nombre)}</h3>
                     <div class="materia-card-stats">
                         <div class="materia-stat">
-                            <span class="materia-stat-value">${materia.prioridad}</span>
+                            <span class="materia-stat-value">${Utils.escapeHtml(materia.prioridad)}</span>
                             <span class="materia-stat-label">Prioridad</span>
                         </div>
                     </div>
@@ -130,10 +130,10 @@ class Materias {
 
         tbody.innerHTML = this.materias.map(materia => `
             <tr>
-                <td><strong>${materia.codigo}</strong></td>
-                <td>${materia.nombre}</td>
+                <td><strong>${Utils.escapeHtml(materia.codigo)}</strong></td>
+                <td>${Utils.escapeHtml(materia.nombre)}</td>
                 <td><span class="materia-color-badge" style="background-color: ${materia.color}"></span></td>
-                <td>${materia.prioridad}</td>
+                <td>${Utils.escapeHtml(materia.prioridad)}</td>
                 <td>-</td>
                 <td>-</td>
                 <td>

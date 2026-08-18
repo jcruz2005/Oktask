@@ -1,13 +1,12 @@
 package com.academic.gestor;
 
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,7 +26,19 @@ class NativeLauncherTest {
             String valor = (String) field.get(null);
 
             // Act & Assert
-            assertEquals("Gestor de Tareas Académicas", valor);
+            assertEquals("OKtask", valor);
+        }
+
+        @Test
+        @DisplayName("deberia tener version de aplicacion 1.2.0")
+        void deberiaTenerVersionDeAplicacion() throws Exception {
+            // Arrange
+            Field field = NativeLauncher.class.getDeclaredField("APP_VERSION");
+            field.setAccessible(true);
+            String valor = (String) field.get(null);
+
+            // Act & Assert
+            assertEquals("1.2.0", valor);
         }
 
         @Test
@@ -70,14 +81,14 @@ class NativeLauncherTest {
         }
 
         @Test
-        @DisplayName("deberia tener intervalo de polling de 1000ms")
+        @DisplayName("deberia tener intervalo de polling de 500ms")
         void deberiaTenerIntervaloDePolling() throws Exception {
             // Arrange
             Field field = NativeLauncher.class.getDeclaredField("SERVER_POLL_INTERVAL_MS");
             field.setAccessible(true);
 
             // Act & Assert
-            assertEquals(1000, field.getInt(null));
+            assertEquals(500, field.getInt(null));
         }
 
         @Test
@@ -116,7 +127,7 @@ class NativeLauncherTest {
             NativeLauncher launcher = new NativeLauncher();
 
             // Act
-            java.lang.reflect.Field field = NativeLauncher.class.getDeclaredField("webView");
+            Field field = NativeLauncher.class.getDeclaredField("webView");
             field.setAccessible(true);
             Object webView = field.get(launcher);
 
@@ -131,7 +142,7 @@ class NativeLauncherTest {
             NativeLauncher launcher = new NativeLauncher();
 
             // Act
-            java.lang.reflect.Field field = NativeLauncher.class.getDeclaredField("webEngine");
+            Field field = NativeLauncher.class.getDeclaredField("webEngine");
             field.setAccessible(true);
             Object webEngine = field.get(launcher);
 
@@ -141,143 +152,93 @@ class NativeLauncherTest {
     }
 
     @Nested
-    @DisplayName("Metodo isServerReady")
-    class IsServerReadyTests {
+    @DisplayName("Metodo checkServer")
+    class CheckServerTests {
 
         @Test
-        @DisplayName("deberia retornar false cuando servidor no esta disponible")
-        void deberiaRetornarFalseCuandoServidorNoDisponible() throws Exception {
+        @DisplayName("deberia ser un metodo estatico que retorna boolean")
+        void deberiaSerMetodoEstaticoQueRetornaBoolean() throws Exception {
             // Arrange
-            NativeLauncher launcher = new NativeLauncher();
-            Method method = NativeLauncher.class.getDeclaredMethod("isServerReady");
-            method.setAccessible(true);
-
-            // Act
-            boolean resultado = (boolean) method.invoke(launcher);
+            Method method = NativeLauncher.class.getDeclaredMethod("checkServer");
 
             // Assert
-            assertFalse(resultado);
+            assertNotNull(method);
+            assertTrue(Modifier.isStatic(method.getModifiers()));
+            assertEquals(boolean.class, method.getReturnType());
         }
     }
 
     @Nested
-    @DisplayName("Metodo handleApplicationClose")
-    class HandleApplicationCloseTests {
+    @DisplayName("Metodos privados del ciclo de vida")
+    class MetodosCicloVidaTests {
 
         @Test
-        @DisplayName("deberia manejar cierre sin excepcion cuando webEngine es null")
-        void deberiaManejarCierreSinExcepcionCuandoWebEngineEsNull() {
-            // Arrange
-            NativeLauncher launcher = new NativeLauncher();
-            // webEngine es null por defecto
-
-            // Act & Assert - No deberia lanzar excepcion NullPointerException
-            // El metodo tiene null check para webEngine
-            // Nota: Platform.exit() y System.exit() serian llamados pero
-            // en contexto de test esto podria causar problemas
-            // Solo validamos que el null check exista
-            try {
-                Method method = NativeLauncher.class.getDeclaredMethod("handleApplicationClose");
-                method.setAccessible(true);
-                // No invocamos porquePlatform.exit() cerraria el test
-                assertNotNull(method);
-            } catch (NoSuchMethodException e) {
-                fail("El metodo handleApplicationClose debe existir");
-            }
-        }
-    }
-
-    @Nested
-    @DisplayName("Metodo createScene")
-    class CreateSceneTests {
-
-        @Test
-        @DisplayName("deberia tener metodo createScene definido")
-        void deberiaTenerMetodoCreateSceneDefinido() {
+        @DisplayName("deberia tener metodo createSplashScreen definido")
+        void deberiaTenerMetodoCreateSplashScreenDefinido() {
             // Arrange & Act
             Method[] methods = NativeLauncher.class.getDeclaredMethods();
 
             // Assert
             boolean found = false;
             for (Method m : methods) {
-                if (m.getName().equals("createScene")) {
+                if (m.getName().equals("createSplashScreen")) {
                     found = true;
                     break;
                 }
             }
-            assertTrue(found, "El metodo createScene debe existir");
+            assertTrue(found, "El metodo createSplashScreen debe existir");
         }
-    }
-
-    @Nested
-    @DisplayName("Metodo applyStylesheet")
-    class ApplyStylesheetTests {
 
         @Test
-        @DisplayName("deberia tener metodo applyStylesheet definido")
-        void deberiaTenerMetodoApplyStylesheetDefinido() {
+        @DisplayName("deberia tener metodo loadWebView definido")
+        void deberiaTenerMetodoLoadWebViewDefinido() {
             // Arrange & Act
             Method[] methods = NativeLauncher.class.getDeclaredMethods();
 
             // Assert
             boolean found = false;
             for (Method m : methods) {
-                if (m.getName().equals("applyStylesheet")) {
+                if (m.getName().equals("loadWebView")) {
                     found = true;
                     break;
                 }
             }
-            assertTrue(found, "El metodo applyStylesheet debe existir");
+            assertTrue(found, "El metodo loadWebView debe existir");
         }
-    }
-
-    @Nested
-    @DisplayName("Metodo startSpringBootServer")
-    class StartSpringBootServerTests {
 
         @Test
-        @DisplayName("deberia tener metodo startSpringBootServer definido")
-        void deberiaTenerMetodoStartSpringBootServerDefinido() {
+        @DisplayName("deberia tener metodo waitForServer definido")
+        void deberiaTenerMetodoWaitForServerDefinido() {
             // Arrange & Act
             Method[] methods = NativeLauncher.class.getDeclaredMethods();
 
             // Assert
             boolean found = false;
             for (Method m : methods) {
-                if (m.getName().equals("startSpringBootServer")) {
+                if (m.getName().equals("waitForServer")) {
                     found = true;
                     break;
                 }
             }
-            assertTrue(found, "El metodo startSpringBootServer debe existir");
+            assertTrue(found, "El metodo waitForServer debe existir");
         }
-    }
-
-    @Nested
-    @DisplayName("Metodo configureWebView")
-    class ConfigureWebViewTests {
 
         @Test
-        @DisplayName("deberia tener metodo configureWebView definido")
-        void deberiaTenerMetodoConfigureWebViewDefinido() {
+        @DisplayName("deberia tener metodo checkForUpdates definido")
+        void deberiaTenerMetodoCheckForUpdatesDefinido() {
             // Arrange & Act
             Method[] methods = NativeLauncher.class.getDeclaredMethods();
 
             // Assert
             boolean found = false;
             for (Method m : methods) {
-                if (m.getName().equals("configureWebView")) {
+                if (m.getName().equals("checkForUpdates")) {
                     found = true;
                     break;
                 }
             }
-            assertTrue(found, "El metodo configureWebView debe existir");
+            assertTrue(found, "El metodo checkForUpdates debe existir");
         }
-    }
-
-    @Nested
-    @DisplayName("Metodo configureStage")
-    class ConfigureStageTests {
 
         @Test
         @DisplayName("deberia tener metodo configureStage definido")
@@ -295,27 +256,22 @@ class NativeLauncherTest {
             }
             assertTrue(found, "El metodo configureStage debe existir");
         }
-    }
-
-    @Nested
-    @DisplayName("Metodo sleepBeforeNextAttempt")
-    class SleepBeforeNextAttemptTests {
 
         @Test
-        @DisplayName("deberia tener metodo sleepBeforeNextAttempt definido")
-        void deberiaTenerMetodoSleepBeforeNextAttemptDefinido() {
+        @DisplayName("deberia tener metodo ensureDataDirectoryExists definido")
+        void deberiaTenerMetodoEnsureDataDirectoryExistsDefinido() {
             // Arrange & Act
             Method[] methods = NativeLauncher.class.getDeclaredMethods();
 
             // Assert
             boolean found = false;
             for (Method m : methods) {
-                if (m.getName().equals("sleepBeforeNextAttempt")) {
+                if (m.getName().equals("ensureDataDirectoryExists")) {
                     found = true;
                     break;
                 }
             }
-            assertTrue(found, "El metodo sleepBeforeNextAttempt debe existir");
+            assertTrue(found, "El metodo ensureDataDirectoryExists debe existir");
         }
     }
 

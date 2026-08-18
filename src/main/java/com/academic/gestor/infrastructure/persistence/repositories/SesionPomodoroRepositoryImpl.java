@@ -9,7 +9,6 @@ import com.academic.gestor.infrastructure.persistence.mappers.SesionPomodoroEnti
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +16,11 @@ import java.util.stream.Collectors;
 
 /**
  * Implementación del repositorio de sesiones de Pomodoro usando JPA.
+ *
+ * <p>Las sumas de duración se calculan en memoria a partir de las sesiones
+ * completadas, utilizando {@code calcularDuracionReal()} de la entidad de
+ * dominio. Esto evita depender del formato de almacenamiento de fechas de
+ * SQLite (TEXT vs INTEGER) y garantiza resultados correctos.</p>
  *
  * @author Gestor de Tareas Académicas
  * @since 1.0.0
@@ -83,32 +87,43 @@ public class SesionPomodoroRepositoryImpl implements SesionPomodoroRepository {
 
     @Override
     public long sumDuracionByMateriaId(final UUID materiaId) {
-        return jpaRepository.sumDuracionRealByMateriaId(materiaId);
+        return jpaRepository.findByMateriaId(materiaId).stream()
+                .map(SesionPomodoroEntityMapper::toDomain)
+                .filter(this::esSesionTrabajoCompletada)
+                .mapToLong(SesionPomodoro::calcularDuracionReal)
+                .sum();
     }
 
     @Override
     public long sumDuracionByFechaInRange(final LocalDateTime inicio, final LocalDateTime fin) {
-        return jpaRepository.sumDuracionRealByFechaInRange(
-                toEpochMillis(inicio), toEpochMillis(fin)
-        );
+        return jpaRepository.findByTipoSesionAndCompletadaAndFechaInicioBetween(
+                TipoSesion.TRABAJO.name(), true, inicio, fin
+        ).stream()
+                .map(SesionPomodoroEntityMapper::toDomain)
+                .mapToLong(SesionPomodoro::calcularDuracionReal)
+                .sum();
     }
 
     @Override
     public long sumDuracionByMateriaIdAndFechaInRange(final UUID materiaId,
                                                        final LocalDateTime inicio,
                                                        final LocalDateTime fin) {
-        return jpaRepository.sumDuracionRealByMateriaIdAndFechaInRange(
-                materiaId, toEpochMillis(inicio), toEpochMillis(fin)
-        );
+        return jpaRepository.findByTipoSesionAndCompletadaAndFechaInicioBetween(
+                TipoSesion.TRABAJO.name(), true, inicio, fin
+        ).stream()
+                .map(SesionPomodoroEntityMapper::toDomain)
+                .filter(s -> s.getMateriaId().equals(materiaId))
+                .mapToLong(SesionPomodoro::calcularDuracionReal)
+                .sum();
     }
 
     /**
-     * Convierte LocalDateTime a epoch milliseconds para SQLite.
+     * Verifica si una sesión es de trabajo y está completada.
      *
-     * @param dateTime fecha a convertir
-     * @return epoch milliseconds
+     * @param sesion sesión a evaluar
+     * @return true si corresponde sumar su duración
      */
-    private long toEpochMillis(final LocalDateTime dateTime) {
-        return dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    private boolean esSesionTrabajoCompletada(final SesionPomodoro sesion) {
+        return sesion.getTipoSesion() == TipoSesion.TRABAJO && sesion.isCompletada();
     }
 }

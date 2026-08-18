@@ -2,6 +2,7 @@ package com.academic.gestor.application.services;
 
 import com.academic.gestor.domain.exceptions.ConfiguracionInvalidaException;
 import com.academic.gestor.domain.exceptions.SesionPomodoroException;
+import com.academic.gestor.domain.exceptions.TareaNotFoundException;
 import com.academic.gestor.domain.model.entities.ConfiguracionPomodoro;
 import com.academic.gestor.domain.model.entities.SesionPomodoro;
 import com.academic.gestor.domain.model.entities.Tarea;
@@ -57,6 +58,20 @@ public class SesionPomodoroServiceImpl implements SesionPomodoroService {
         if (duracionMinutos <= 0) {
             throw new ConfiguracionInvalidaException(
                     "La duración de la sesión debe ser mayor a 0 minutos"
+            );
+        }
+
+        // Validar que la tarea exista antes de iniciar la sesión
+        if (!tareaRepository.existsById(tareaId)) {
+            throw new TareaNotFoundException("Tarea no encontrada: " + tareaId);
+        }
+
+        // Evitar sesiones concurrentes sobre la misma tarea
+        final boolean sesionActiva = sesionRepository.findByTareaId(tareaId).stream()
+                .anyMatch(s -> !s.isCompletada());
+        if (sesionActiva) {
+            throw new SesionPomodoroException(
+                    "Ya existe una sesión de Pomodoro en curso para esta tarea"
             );
         }
 

@@ -494,17 +494,31 @@ class BuildScriptsTest {
         }
 
         @Test
-        @DisplayName("todos los scripts deben usar app-version 1.1.0")
+        @DisplayName("todos los scripts deben usar la version definida en pom.xml")
         void todosLosScriptsDebenUsarAppVersion() throws IOException {
             // Arrange
             String linux = Files.readString(Path.of("build-linux.sh"), StandardCharsets.UTF_8);
             String windows = Files.readString(Path.of("build-windows.bat"), StandardCharsets.UTF_8);
             String macos = Files.readString(Path.of("build-macos.sh"), StandardCharsets.UTF_8);
 
+            // La version de referencia es la del pom.xml (fuente única de verdad)
+            String pom = Files.readString(Path.of("pom.xml"), StandardCharsets.UTF_8);
+            // Tomar el <version> del proyecto (después de <artifactId>oktask</artifactId>),
+            // no el del parent de Spring Boot
+            String seccionProyecto = pom.substring(pom.indexOf("<artifactId>oktask</artifactId>"));
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("<version>(\\d+\\.\\d+\\.\\d+)</version>")
+                    .matcher(seccionProyecto);
+            assertTrue(m.find(), "pom.xml debe contener una version semver para el proyecto");
+            String version = m.group(1);
+
             // Act & Assert
-            assertTrue(linux.contains("APP_VERSION=\"1.1.0\""), "Linux: falta version");
-            assertTrue(windows.contains("APP_VERSION=1.1.0"), "Windows: falta version");
-            assertTrue(macos.contains("APP_VERSION=\"1.1.0\""), "macOS: falta version");
+            assertTrue(linux.contains("APP_VERSION=\"" + version + "\""),
+                    "Linux: version debe coincidir con pom.xml (" + version + ")");
+            assertTrue(windows.contains("APP_VERSION=" + version),
+                    "Windows: version debe coincidir con pom.xml (" + version + ")");
+            assertTrue(macos.contains("APP_VERSION=\"" + version + "\""),
+                    "macOS: version debe coincidir con pom.xml (" + version + ")");
         }
 
         @Test

@@ -258,14 +258,26 @@ class App {
                 });
             }
 
-            // 1-4: Cambiar de tab (sin Ctrl)
-            if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+            // 1-4: Cambiar de tab (sin Ctrl), solo si no se está escribiendo en un campo
+            if (!e.ctrlKey && !e.metaKey && !e.altKey && !this.esCampoTexto(e.target)) {
                 if (e.key === '1') this.navegarA('dashboard');
                 if (e.key === '2') this.navegarA('materias');
                 if (e.key === '3') this.navegarA('tareas');
                 if (e.key === '4') this.navegarA('pomodoro');
             }
         });
+    }
+
+    /**
+     * Verifica si el elemento es un campo de texto editable
+     * @param {Element} elemento - Elemento del evento
+     * @returns {boolean} true si es un input, textarea o select
+     */
+    esCampoTexto(elemento) {
+        if (!elemento) return false;
+        const tag = elemento.tagName?.toLowerCase();
+        return tag === 'input' || tag === 'textarea' || tag === 'select'
+            || elemento.isContentEditable;
     }
 }
 

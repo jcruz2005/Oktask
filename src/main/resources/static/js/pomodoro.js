@@ -12,6 +12,7 @@ class Pomodoro {
         
         // Estado del temporizador
         this.estado = 'inactivo'; // inactivo, trabajo, descanso, pausado
+        this.estadoPrevio = null; // trabajo o descanso antes de pausar
         this.tiempoRestante = 25 * 60; // en segundos
         this.tiempoTotal = 25 * 60;
         this.intervalo = null;
@@ -315,9 +316,9 @@ class Pomodoro {
                  data-materia-id="${tarea.materiaId}">
                 <div class="task-color" style="background-color: ${materia?.color || '#6B7280'}"></div>
                 <div class="task-info">
-                    <div class="task-title">${tarea.titulo}</div>
+                    <div class="task-title">${Utils.escapeHtml(tarea.titulo)}</div>
                     <div class="task-meta">
-                        <span class="task-materia">${materia?.codigo || 'Sin materia'}</span>
+                        <span class="task-materia">${Utils.escapeHtml(materia?.codigo || 'Sin materia')}</span>
                         ${!esCompletada ? `<span class="task-due ${urgencyClass}">${Utils.formatearFechaCorta(tarea.fechaLimite)}</span>` : ''}
                     </div>
                 </div>
@@ -453,7 +454,9 @@ class Pomodoro {
      */
     pausar() {
         if (this.estado !== 'trabajo' && this.estado !== 'descanso') return;
-        
+
+        // Recordar el estado previo para restaurarlo al reanudar
+        this.estadoPrevio = this.estado;
         this.estado = 'pausado';
         this.detenerTemporizador();
         this.mostrarBotones('pausado');
@@ -464,8 +467,9 @@ class Pomodoro {
      */
     reanudar() {
         if (this.estado !== 'pausado') return;
-        
-        this.estado = this.tiempoRestante > 0 ? 'trabajo' : 'descanso';
+
+        // Restaurar el estado anterior (trabajo o descanso), no asumir 'trabajo'
+        this.estado = this.estadoPrevio === 'descanso' ? 'descanso' : 'trabajo';
         this.iniciarTemporizador();
         this.mostrarBotones(this.estado);
     }

@@ -6,6 +6,7 @@ import com.academic.gestor.domain.ports.inbound.SesionPomodoroService;
 import com.academic.gestor.infrastructure.web.dto.request.ActualizarConfiguracionPomodoroRequest;
 import com.academic.gestor.infrastructure.web.dto.request.CancelarSesionPomodoroRequest;
 import com.academic.gestor.infrastructure.web.dto.request.CrearSesionPomodoroRequest;
+import com.academic.gestor.infrastructure.web.dto.response.ConfiguracionPomodoroResponse;
 import com.academic.gestor.infrastructure.web.dto.response.SesionPomodoroResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -154,11 +155,11 @@ public class PomodoroController {
      * @return configuración del Pomodoro
      */
     @GetMapping("/configuracion")
-    public ResponseEntity<?> obtenerConfiguracion() {
+    public ResponseEntity<ConfiguracionPomodoroResponse> obtenerConfiguracion() {
         log.info("GET /api/pomodoro/configuracion - Obteniendo configuración");
 
-        final var configuracion = sesionService.obtenerConfiguracion();
-        return ResponseEntity.ok(configuracion);
+        final ConfiguracionPomodoro configuracion = sesionService.obtenerConfiguracion();
+        return ResponseEntity.ok(toConfigResponse(configuracion));
     }
 
     /**
@@ -189,17 +190,35 @@ public class PomodoroController {
      * @return configuración actualizada
      */
     @PutMapping("/configuracion")
-    public ResponseEntity<?> actualizarConfiguracion(
+    public ResponseEntity<ConfiguracionPomodoroResponse> actualizarConfiguracion(
             @Valid @RequestBody final ActualizarConfiguracionPomodoroRequest request) {
         log.info("PUT /api/pomodoro/configuracion - Actualizando configuración");
-        
+
         final ConfiguracionPomodoro actualizada = sesionService.actualizarConfiguracion(
                 request.duracionTrabajo(),
                 request.duracionDescanso(),
                 request.duracionDescansoLargo(),
                 request.pomodorosParaDescansoLargo()
         );
-        
-        return ResponseEntity.ok(actualizada);
+
+        return ResponseEntity.ok(toConfigResponse(actualizada));
+    }
+
+    /**
+     * Convierte una entidad ConfiguracionPomodoro a su DTO de respuesta.
+     *
+     * @param config entidad de dominio
+     * @return DTO de respuesta
+     */
+    private ConfiguracionPomodoroResponse toConfigResponse(final ConfiguracionPomodoro config) {
+        return new ConfiguracionPomodoroResponse(
+                config.getId(),
+                config.getDuracionTrabajo().minutos(),
+                config.getDuracionDescanso().minutos(),
+                config.getDuracionDescansoLargo().minutos(),
+                config.getPomodorosParaDescansoLargo(),
+                config.getFechaCreacion(),
+                config.isActiva()
+        );
     }
 }

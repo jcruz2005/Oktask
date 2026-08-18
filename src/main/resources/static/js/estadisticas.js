@@ -214,8 +214,8 @@ class Estadisticas {
                     <div class="task-item">
                         <div class="task-color" style="background-color: ${materia?.color || '#7C3AED'}"></div>
                         <div class="task-info">
-                            <div class="task-title">${tarea.titulo}</div>
-                            <div class="task-meta">${materia?.codigo || ''}</div>
+                            <div class="task-title">${Utils.escapeHtml(tarea.titulo)}</div>
+                            <div class="task-meta">${Utils.escapeHtml(materia?.codigo || '')}</div>
                         </div>
                         <span class="task-due ${claseUrgencia}">${textoDias}</span>
                     </div>
@@ -263,7 +263,7 @@ class Estadisticas {
                     <div class="session-item">
                         <div class="task-color" style="background-color: ${materia?.color || '#7C3AED'}"></div>
                         <div class="session-info">
-                            <div class="task-title">${materia?.nombre || 'Sin materia'}</div>
+                            <div class="task-title">${Utils.escapeHtml(materia?.nombre || 'Sin materia')}</div>
                             <div class="task-meta">${fecha}</div>
                         </div>
                         <span class="session-time">${sesion.duracionMinutos} min</span>

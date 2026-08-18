@@ -162,7 +162,7 @@ class SesionPomodoroTest {
             // Act & Then
             SesionPomodoroException ex = assertThrows(SesionPomodoroException.class,
                     sesion::completar);
-            assertEquals("La sesion de Pomodoro ya esta completada", ex.getMessage());
+            assertEquals("La sesión de Pomodoro ya está completada", ex.getMessage());
         }
     }
 
