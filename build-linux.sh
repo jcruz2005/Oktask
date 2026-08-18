@@ -254,6 +254,12 @@ mkdir -p "$HOME/.local/bin"
 ln -sf "$LAUNCHER_BIN" "$HOME/.local/bin/oktask"
 echo "[OK] Symlink en ~/.local/bin/oktask"
 
+# Agregar ~/.local/bin al PATH si no está
+if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+    echo "[OK] ~/.local/bin agregado al PATH en .bashrc"
+fi
+
 echo ""
 echo "[INFO] Ejecutar: $LAUNCHER_BIN"
 echo ""
