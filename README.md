@@ -95,6 +95,8 @@ mvn clean package -DskipTests
 java -jar target/oktask-1.2.0.jar
 ```
 
+> **⚠️ Importante:** Este método es solo para **desarrolladores**. Si solo querés usar la aplicación, descargá el instalador desde [Releases](https://github.com/jcruz2005/Oktask/releases) — no necesitás tener Java ni Maven instalado.
+
 ---
 
 ### Opción 3 — Aplicación nativa con jpackage
@@ -332,6 +334,7 @@ La aplicación expone una API REST bajo el prefijo `/api/`.
 |----------|----------|
 | `java: command not found` | Instalá Java 21+ y verificá que esté en el PATH (`java -version`) |
 | `mvn: command not found` | Instalá Maven 3.8+ y agregalo al PATH |
+| `mvn spring-boot:run falla` | **No uses este comando.** Descargá el instalador desde [Releases](https://github.com/jcruz2005/Oktask/releases) |
 | `jpackage not found` | Usá un JDK completo (no JRE). jpackage viene incluido desde JDK 14 |
 | SmartScreen bloquea en Windows | Clic en "Más información" → "Ejecutar de todas formas" |
 | macOS dice "aplicación dañada" | Ve a Ajustes → Privacidad y Seguridad → Permitir |
