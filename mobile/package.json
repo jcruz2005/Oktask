@@ -10,7 +10,22 @@
     "sync": "npx cap sync",
     "copy": "npx cap copy"
   },
-  "keywords": ["oktask", "pomodoro", "tasks", "android", "ios"],
+  "keywords": [
+    "oktask",
+    "pomodoro",
+    "tasks",
+    "android",
+    "ios"
+  ],
   "author": "jcruz2005",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor-community/sqlite": "^8.1.1",
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/local-notifications": "^8.3.0",
+    "@capacitor/share": "^8.0.1",
+    "@capawesome/capacitor-background-task": "^8.0.2"
+  }
 }
