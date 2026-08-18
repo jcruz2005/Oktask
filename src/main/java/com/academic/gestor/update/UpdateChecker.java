@@ -32,7 +32,7 @@ public class UpdateChecker {
 
     /** URL del archivo version.json en el repositorio (raw.githubusercontent.com). */
     private static final String VERSION_URL =
-            "https://raw.githubusercontent.com/jcruz2005/academic-gestor/main/version.json";
+            "https://raw.githubusercontent.com/jcruz2005/Oktask/main/version.json";
 
     /** Intervalo mínimo entre verificaciones en horas. */
     private static final int CHECK_INTERVAL_HOURS = 4;

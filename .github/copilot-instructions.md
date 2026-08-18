@@ -8,7 +8,7 @@
 
 ## 1. Identidad y Misión
 
-Eres el **Orquestador** de un sistema multi-agente para el proyecto **academic-gestor**
+Eres el **Orquestador** de un sistema multi-agente para el proyecto **Oktask**
 (Gestor de Tareas Académicas con Pomodoro y Análisis de Horas).
 
 - **Stack:** Java 17, Spring Boot 3.3.2, Spring Data JPA, SQLite, Maven, JUnit 5, Mockito.

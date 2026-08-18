@@ -10,17 +10,17 @@
   ],
   "downloads": {
     "linux": {
-      "url": "https://github.com/jcruz2005/academic-gestor/releases/download/v1.2.0/OKtask-1.2.0-linux-x64.tar.gz",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.0/OKtask-1.2.0-linux-x64.tar.gz",
       "filename": "OKtask-1.2.0-linux-x64.tar.gz",
       "installCommand": "tar -xzf OKtask-1.2.0-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
     },
     "windows": {
-      "url": "https://github.com/jcruz2005/academic-gestor/releases/download/v1.2.0/OKtask-1.2.0.msi",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.0/OKtask-1.2.0.msi",
       "filename": "OKtask-1.2.0.msi",
       "installCommand": ""
     },
     "macos": {
-      "url": "https://github.com/jcruz2005/academic-gestor/releases/download/v1.2.0/OKtask-1.2.0.dmg",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.0/OKtask-1.2.0.dmg",
       "filename": "OKtask-1.2.0.dmg",
       "installCommand": ""
     }

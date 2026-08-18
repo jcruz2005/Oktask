@@ -2,7 +2,7 @@
 
 Gestor de tareas con Pomodoro y análisis de minutos de estudio.
 
-[![Release](https://img.shields.io/badge/Release-v1.2.0-blue.svg)](https://github.com/jcruz2005/academic-gestor/releases)
+[![Release](https://img.shields.io/badge/Release-v1.2.0-blue.svg)](https://github.com/jcruz2005/Oktask/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#licencia)
 [![Java 21](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot 3.3](https://img.shields.io/badge/Spring%20Boot-3.3.2-green.svg)](https://spring.io/projects/spring-boot)
@@ -38,7 +38,7 @@ Gestor de tareas con Pomodoro y análisis de minutos de estudio.
 
 La forma más rápida. No necesitás tener Java ni Maven instalado.
 
-1. Andá a [Releases](https://github.com/jcruz2005/academic-gestor/releases)
+1. Andá a [Releases](https://github.com/jcruz2005/Oktask/releases)
 2. Descargá el archivo para tu sistema operativo:
 
 | Sistema operativo | Archivo |
@@ -81,8 +81,8 @@ Si querés modificar el código o contribuir al desarrollo.
 #### Clonar y ejecutar
 
 ```bash
-git clone https://github.com/jcruz2005/academic-gestor.git
-cd academic-gestor
+git clone https://github.com/jcruz2005/Oktask.git
+cd Oktask
 mvn spring-boot:run
 ```
 
@@ -136,8 +136,8 @@ sudo pacman -S jdk21-openjdk maven
 ##### Compilar
 
 ```bash
-git clone https://github.com/jcruz2005/academic-gestor.git
-cd academic-gestor
+git clone https://github.com/jcruz2005/Oktask.git
+cd Oktask
 chmod +x build-linux.sh
 ./build-linux.sh
 ```
@@ -172,8 +172,8 @@ También necesitás [Maven](https://maven.apache.org/download.cgi) — descargar
 Abrí **Command Prompt** o **PowerShell**:
 
 ```cmd
-git clone https://github.com/jcruz2005/academic-gestor.git
-cd academic-gestor
+git clone https://github.com/jcruz2005/Oktask.git
+cd Oktask
 build-windows.bat
 ```
 
@@ -209,8 +209,8 @@ xcode-select --install
 ##### Compilar
 
 ```bash
-git clone https://github.com/jcruz2005/academic-gestor.git
-cd academic-gestor
+git clone https://github.com/jcruz2005/Oktask.git
+cd Oktask
 chmod +x build-macos.sh
 ./build-macos.sh
 ```
@@ -239,7 +239,7 @@ La aplicación usa **SQLite** (base de datos embebida) que se crea automáticame
 ## Estructura del Proyecto
 
 ```
-academic-gestor/
+Oktask/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/academic/gestor/
