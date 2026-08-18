@@ -2,7 +2,7 @@
 
 Gestor de tareas con Pomodoro y análisis de minutos de estudio.
 
-[![Release](https://img.shields.io/badge/Release-v1.1.0-blue.svg)](https://github.com/jcruz2005/academic-gestor/releases)
+[![Release](https://img.shields.io/badge/Release-v1.2.0-blue.svg)](https://github.com/jcruz2005/academic-gestor/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#licencia)
 [![Java 21](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot 3.3](https://img.shields.io/badge/Spring%20Boot-3.3.2-green.svg)](https://spring.io/projects/spring-boot)
@@ -17,6 +17,7 @@ Gestor de tareas con Pomodoro y análisis de minutos de estudio.
 - **Modo Oscuro**: Soporte para tema claro y oscuro
 - **Drag & Drop**: Reordenar tareas con arrastrar y soltar
 - **Persistencia**: Base de datos SQLite que conserva datos entre sesiones
+- **Actualizaciones**: Sistema de notificación y descarga de actualizaciones
 
 ## Tecnologías
 
@@ -33,16 +34,47 @@ Gestor de tareas con Pomodoro y análisis de minutos de estudio.
 
 ## Instalación
 
-### Opción 1 — Ejecutar desde el JAR (todas las plataformas)
+### Opción 1 — Descargar desde GitHub Releases (recomendado)
 
-La forma más rápida de usar la aplicación.
+La forma más rápida. No necesitás tener Java ni Maven instalado.
+
+1. Andá a [Releases](https://github.com/jcruz2005/academic-gestor/releases)
+2. Descargá el archivo para tu sistema operativo:
+
+| Sistema operativo | Archivo |
+|---|---|
+| **Linux** (Ubuntu, Fedora, Arch) | `OKtask-1.2.0-linux-x64.tar.gz` |
+| **Windows** (10, 11) | `OKtask-1.2.0.msi` |
+| **macOS** (Ventura, Sonoma, Sequoia) | `OKtask-1.2.0.dmg` |
+
+3. Seguí las instrucciones de instalación para tu SO:
+
+#### Linux
+```bash
+tar -xzf OKtask-1.2.0-linux-x64.tar.gz
+sudo cp -r OKtask /opt/
+sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask
+oktask
+```
+
+#### Windows
+Doble clic en `OKtask-1.2.0.msi` y seguir el asistente.
+
+#### macOS
+Abrir el `.dmg` y arrastrar OKtask a Applications.
+
+---
+
+### Opción 2 — Ejecutar desde el código fuente
+
+Si querés modificar el código o contribuir al desarrollo.
 
 #### Requisitos previos
 
 | Requisito | Versión mínima | Cómo verificar |
 |---|---|---|
-| **Java (JRE o JDK)** | 21 o superior | `java -version` |
-| **Maven** | 3.8+ (solo para compilar) | `mvn --version` |
+| **Java (JDK)** | 21 o superior | `java -version` |
+| **Maven** | 3.8+ | `mvn --version` |
 
 > **No necesitás instalar SQLite** — la base de datos se crea automáticamente al iniciar.
 
@@ -60,12 +92,12 @@ La aplicación estará disponible en **http://localhost:8080**
 
 ```bash
 mvn clean package -DskipTests
-java -jar target/oktask-1.1.0.jar
+java -jar target/oktask-1.2.0.jar
 ```
 
 ---
 
-### Opción 2 — Aplicación nativa con jpackage
+### Opción 3 — Aplicación nativa con jpackage
 
 Los scripts de build crean una **aplicación nativa** con su propio runtime de Java incrustado. El usuario final no necesita tener Java instalado.
 
@@ -79,11 +111,11 @@ Los scripts de build crean una **aplicación nativa** con su propio runtime de J
 
 ---
 
-### Linux
+#### Linux
 
 **Distribuciones probadas:** Ubuntu 22.04+, Fedora 38+, Arch Linux, CachyOS
 
-#### Instalar Java 21 (si no lo tenés)
+##### Instalar Java 21 (si no lo tenés)
 
 **Ubuntu / Debian:**
 ```bash
@@ -101,7 +133,7 @@ sudo dnf install java-21-openjdk-devel maven
 sudo pacman -S jdk21-openjdk maven
 ```
 
-#### Compilar y ejecutar
+##### Compilar
 
 ```bash
 git clone https://github.com/jcruz2005/academic-gestor.git
@@ -110,33 +142,24 @@ chmod +x build-linux.sh
 ./build-linux.sh
 ```
 
-#### Ejecutar
+##### Ejecutar
 
+```bash
+oktask
+```
+
+O directamente:
 ```bash
 ./target/installers/OKtask/bin/OKtask
 ```
 
-#### Estructura generada
-
-```
-target/installers/OKtask/
-├── bin/
-│   └── OKtask              ← ejecutable
-├── lib/
-│   ├── app/                ← JAR plano + dependencias
-│   └── runtime/            ← JRE embebido
-└── share/
-    └── applications/
-        └── OKtask.desktop  ← acceso directo
-```
-
 ---
 
-### Windows
+#### Windows
 
 **Versiones probadas:** Windows 10 (22H2+), Windows 11
 
-#### Instalar Java 21 (si no lo tenés)
+##### Instalar Java 21 (si no lo tenés)
 
 1. Descargá el instalador desde [Adoptium](https://adoptium.net/temurin/releases/?version=21) (recomendado)
 2. Durante la instalación, marcá **"Add to PATH"** y **"Set JAVA_HOME"**
@@ -144,7 +167,7 @@ target/installers/OKtask/
 
 También necesitás [Maven](https://maven.apache.org/download.cgi) — descargar, descomprimir y agregar la carpeta `bin` al PATH.
 
-#### Compilar
+##### Compilar
 
 Abrí **Command Prompt** o **PowerShell**:
 
@@ -154,7 +177,7 @@ cd academic-gestor
 build-windows.bat
 ```
 
-#### Ejecutar
+##### Ejecutar
 
 ```cmd
 target\installers\OKtask\OKtask.exe
@@ -162,25 +185,13 @@ target\installers\OKtask\OKtask.exe
 
 > **Nota:** Windows puede mostrar una alerta de SmartScreen la primera vez. Hacé clic en **"Más información" → "Ejecutar de todas formas"**.
 
-#### Estructura generada
-
-```
-target\installers\OKtask\
-├── OKtask.exe              ← ejecutable
-├── OKtask.ico              ← icono
-├── lib\
-│   ├── app\                ← JAR plano + dependencias
-│   └── runtime\            ← JRE embebido
-└── OKtask\                 ← acceso directo en Menú Inicio
-```
-
 ---
 
-### macOS
+#### macOS
 
 **Versiones probadas:** macOS Ventura (13+), Sonoma (14+), Sequoia (15+)
 
-#### Instalar Java 21 (si no lo tenés)
+##### Instalar Java 21 (si no lo tenés)
 
 **Con Homebrew** (recomendado):
 ```bash
@@ -189,13 +200,13 @@ brew install openjdk@21 maven
 
 **Manual:** Descargá el `.pkg` desde [Adoptium](https://adoptium.net/temurin/releases/?version=21)
 
-#### Instalar Xcode Command Line Tools
+##### Instalar Xcode Command Line Tools
 
 ```bash
 xcode-select --install
 ```
 
-#### Compilar y ejecutar
+##### Compilar
 
 ```bash
 git clone https://github.com/jcruz2005/academic-gestor.git
@@ -204,24 +215,11 @@ chmod +x build-macos.sh
 ./build-macos.sh
 ```
 
-#### Ejecutar
+##### Ejecutar
 
 ```bash
 open target/installers/OKtask.app
 ```
-
-#### Crear instalador `.pkg` (opcional, para distribuir)
-
-```bash
-pkgbuild \
-  --component target/installers/OKtask.app \
-  --install-location /Applications \
-  --identifier com.oktask.app \
-  --version 1.1.0 \
-  oktask-1.1.0.pkg
-```
-
-> **Apple Silicon (M1/M2/M3):** Si macOS bloquea la ejecución, andá a **Ajustes del Sistema → Privacidad y Seguridad** y hacé clic en **"Permitir"**.
 
 ---
 
@@ -250,6 +248,7 @@ academic-gestor/
 │   │   │   ├── application/                    # Capa de aplicación (servicios, DTOs)
 │   │   │   ├── domain/                         # Dominio (entidades, repositorios)
 │   │   │   ├── infrastructure/                 # Infraestructura (JPA, controllers)
+│   │   │   ├── update/                         # Sistema de actualizaciones
 │   │   │   └── shared/                         # Utilidades compartidas
 │   │   └── resources/
 │   │       ├── application.yml                 # Configuración (dev)
@@ -258,11 +257,34 @@ academic-gestor/
 │   └── test/                                   # Tests unitarios
 ├── native/
 │   └── icons/                                  # Iconos por plataforma
+├── .github/workflows/release.yml               # Build multiplataforma automático
+├── version.json                                # Info de versiones para actualizaciones
 ├── build-linux.sh                              # Build para Linux
 ├── build-windows.bat                           # Build para Windows
 ├── build-macos.sh                              # Build para macOS
 └── pom.xml                                     # Configuración Maven
 ```
+
+---
+
+## Actualizaciones
+
+La aplicación verifica automáticamente si hay nuevas versiones disponibles. Cuando hay una actualización, aparece un botón 🔄 en el header.
+
+### Para desarrolladores — Publicar una actualización
+
+```bash
+# 1. Subir el código
+git add -A
+git commit -m "feat: nueva función"
+git push
+
+# 2. Crear el tag (esto activa el build multiplataforma)
+git tag -a v1.3.0 -m "v1.3.0"
+git push origin v1.3.0
+```
+
+GitHub Actions buildea automáticamente para Linux, Windows y macOS, y sube los 3 instaladores a la Release.
 
 ---
 
@@ -304,64 +326,6 @@ La aplicación expone una API REST bajo el prefijo `/api/`.
 
 ---
 
-## Configuración
-
-### Modo desarrollo (`application.yml`)
-
-```yaml
-server:
-  port: 8080
-
-spring:
-  datasource:
-    url: jdbc:sqlite:data/oktask.db
-    driver-class-name: org.sqlite.JDBC
-  jpa:
-    hibernate:
-      ddl-auto: update
-```
-
-### Modo app nativa (`application-native.yml`)
-
-```yaml
-server:
-  port: 8080
-
-spring:
-  datasource:
-    url: jdbc:sqlite:${user.home}/.oktask/data/oktask.db
-  jpa:
-    hibernate:
-      ddl-auto: update
-```
-
-> Ambos perfiles usan `ddl-auto: update`, preservando los datos entre sesiones.
-
----
-
-## Desarrollo
-
-```bash
-# Ejecutar tests
-mvn test
-
-# Compilar sin tests
-mvn clean compile
-
-# Empaquetar JAR
-mvn clean package -DskipTests
-
-# Ejecutar en modo desarrollo
-mvn spring-boot:run
-
-# Build nativo para tu plataforma
-./build-linux.sh      # Linux
-./build-macos.sh      # macOS
-build-windows.bat     # Windows
-```
-
----
-
 ## Resolución de problemas
 
 | Problema | Solución |
@@ -373,7 +337,7 @@ build-windows.bat     # Windows
 | macOS dice "aplicación dañada" | Ve a Ajustes → Privacidad y Seguridad → Permitir |
 | Puerto 8080 ocupado | Cambiá el puerto en `application.yml` (`server.port: 8081`) |
 | App nativa no inicia | Verificá que `java -version` muestre Java 21+ |
-| Se pierden datos al actualizar | Asegurate de usar `ddl-auto: update` (no `create`) en `application-native.yml` |
+| `oktask` no funciona en terminal | Ejecutá `source ~/.bashrc` o abrí una nueva terminal |
 
 ---
 
