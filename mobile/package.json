@@ -1,0 +1,16 @@
+{
+  "name": "oktask-mobile",
+  "version": "1.2.0",
+  "description": "OKtask - Gestor de tareas con Pomodoro (Android/iOS)",
+  "main": "index.js",
+  "scripts": {
+    "build": "cp -r ../src/main/resources/static/* www/",
+    "android": "npx cap open android",
+    "ios": "npx cap open ios",
+    "sync": "npx cap sync",
+    "copy": "npx cap copy"
+  },
+  "keywords": ["oktask", "pomodoro", "tasks", "android", "ios"],
+  "author": "jcruz2005",
+  "license": "MIT"
+}

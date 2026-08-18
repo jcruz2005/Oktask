@@ -1,0 +1,21 @@
+{
+  "appId": "com.oktask.app",
+  "appName": "OKtask",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#7C3AED"
+    },
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 2000,
+      "backgroundColor": "#1a1a2e",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}
