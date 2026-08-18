@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
@@ -39,11 +40,13 @@ public class UpdateController {
     /**
      * Verifica si hay actualizaciones disponibles.
      *
+     * @param platform plataforma detectada por el frontend (linux, windows, macos, android)
      * @return ResponseEntity con la información de la actualización
      */
     @GetMapping("/check")
-    public ResponseEntity<Map<String, Object>> checkForUpdate() {
-        log.info("Verificación de actualización solicitada desde frontend");
+    public ResponseEntity<Map<String, Object>> checkForUpdate(
+            @RequestParam(required = false, defaultValue = "") String platform) {
+        log.info("Verificación de actualización solicitada desde frontend (platform={})", platform);
 
         Map<String, Object> response = new HashMap<>();
         response.put("currentVersion", APP_VERSION);
@@ -71,7 +74,10 @@ public class UpdateController {
                         downloads.put(entry.getKey(), dlInfo);
                     }
                     response.put("downloads", downloads);
-                    response.put("currentPlatform", UpdateInfo.detectOS());
+
+                    // Usar platform del frontend si se proporciona, si no detectar del backend
+                    String detectedPlatform = platform.isEmpty() ? UpdateInfo.detectOS() : platform;
+                    response.put("currentPlatform", detectedPlatform);
 
                     log.info("Actualización disponible: v{}", info.getVersion());
                 }

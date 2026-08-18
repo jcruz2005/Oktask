@@ -104,8 +104,59 @@ jobs:
           name: macos-arm64
           path: target/installers/OKtask-*.dmg
 
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: Android-Ios
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK platforms
+        run: |
+          sdkmanager "platforms;android-37" "build-tools;36.0.0"
+
+      - name: Copy frontend to mobile/www
+        run: |
+          rm -rf mobile/www
+          cp -r src/main/resources/static mobile/www
+
+      - name: Sync Capacitor
+        working-directory: mobile
+        run: |
+          npm ci
+          npx cap sync android
+
+      - name: Build APK
+        working-directory: mobile/android
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk \
+             "OKtask-${VERSION}-android.apk"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: OKtask-*-android.apk
+
   release:
-    needs: [build-linux, build-windows, build-macos]
+    needs: [build-linux, build-windows, build-macos, build-android]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -118,4 +169,5 @@ jobs:
             linux-x64/OKtask-*.tar.gz
             windows-x64/OKtask-*.msi
             macos-arm64/OKtask-*.dmg
+            android-apk/OKtask-*-android.apk
           generate_release_notes: true

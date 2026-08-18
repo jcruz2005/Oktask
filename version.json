@@ -2,10 +2,11 @@
   "version": "1.2.0",
   "releaseDate": "2026-08-17",
   "changelog": [
-    "Soporte multiplataforma: Linux, Windows y macOS",
+    "Soporte multiplataforma: Linux, Windows, macOS y Android",
     "Sistema de actualizaciones con detección automática de SO",
-    "GitHub Actions para builds automáticos en las 3 plataformas",
+    "GitHub Actions para builds automáticos en las 4 plataformas",
     "Instrucciones de instalación por plataforma en el modal de actualización",
+    "Descarga directa de APK en Android",
     "Mejoras en el sistema de notificaciones"
   ],
   "downloads": {
@@ -22,6 +23,11 @@
     "macos": {
       "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.0/OKtask-1.2.0.dmg",
       "filename": "OKtask-1.2.0.dmg",
+      "installCommand": ""
+    },
+    "android": {
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.0/OKtask-1.2.0-android.apk",
+      "filename": "OKtask-1.2.0-android.apk",
       "installCommand": ""
     }
   },

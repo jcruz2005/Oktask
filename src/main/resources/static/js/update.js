@@ -8,7 +8,20 @@ class UpdateChecker {
         this.hasUpdate = false;
         this.updateInfo = null;
         this.modal = null;
+        this.platform = this.detectPlatform();
         this.init();
+    }
+
+    /**
+     * Detecta la plataforma actual desde el frontend.
+     * @returns 'android', 'windows', 'macos' o 'linux'
+     */
+    detectPlatform() {
+        const ua = navigator.userAgent || '';
+        if (/android/i.test(ua)) return 'android';
+        if (/Win/i.test(ua)) return 'windows';
+        if (/Mac/i.test(ua)) return 'macos';
+        return 'linux';
     }
 
     init() {
@@ -33,7 +46,7 @@ class UpdateChecker {
             // Animación de loading en el botón
             if (btn) btn.classList.add('spinning');
 
-            const response = await fetch('/api/update/check');
+            const response = await fetch(`/api/update/check?platform=${this.platform}`);
             const data = await response.json();
 
             if (btn) btn.classList.remove('spinning');
@@ -153,11 +166,43 @@ class UpdateChecker {
 
         const data = this.updateInfo;
         const changelog = data.changelog || [];
-        const platform = data.currentPlatform || 'linux';
-        const platformName = platform === 'windows' ? 'Windows' : platform === 'macos' ? 'macOS' : 'Linux';
+        const platform = this.platform;
+        const platformNames = {
+            android: 'Android',
+            windows: 'Windows',
+            macos: 'macOS',
+            linux: 'Linux'
+        };
+        const platformName = platformNames[platform] || 'Linux';
         const platformDl = data.downloads?.[platform];
         const downloadUrl = platformDl?.url || data.downloadUrl;
         const installCmd = platformDl?.installCommand || '';
+
+        // Texto del botón según plataforma
+        const downloadBtnText = platform === 'android'
+            ? 'Descargar APK'
+            : `Descargar para ${platformName}`;
+
+        // Instrucciones de instalación por plataforma
+        let installInstructions = '';
+        if (platform === 'android') {
+            installInstructions = `
+                <div style="margin-top: 15px;">
+                    <h3>Instalación:</h3>
+                    <ol style="color: #4B5563; font-size: 13px; padding-left: 20px; line-height: 1.8;">
+                        <li>Descargá el archivo APK</li>
+                        <li>Abrilo desde la notificación o el administrador de archivos</li>
+                        <li>Si pide permiso, activá "Fuentes desconocidas"</li>
+                        <li>Tocá "Instalar"</li>
+                    </ol>
+                </div>`;
+        } else if (installCmd) {
+            installInstructions = `
+                <div style="margin-top: 15px;">
+                    <h3>Instalación:</h3>
+                    <code style="display: block; background: #1a1a2e; color: #00d4aa; padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap;">${installCmd}</code>
+                </div>`;
+        }
 
         // Crear modal
         this.modal = document.createElement('div');
@@ -181,12 +226,7 @@ class UpdateChecker {
                     <ul class="update-changelog">
                         ${changelog.map(item => `<li>${item}</li>`).join('')}
                     </ul>
-                    ${installCmd ? `
-                    <div style="margin-top: 15px;">
-                        <h3>Instalación:</h3>
-                        <code style="display: block; background: #1a1a2e; color: #00d4aa; padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap;">${installCmd}</code>
-                    </div>
-                    ` : ''}
+                    ${installInstructions}
                 </div>
                 
                 <div class="update-modal-footer">
@@ -194,7 +234,7 @@ class UpdateChecker {
                         Cerrar
                     </button>
                     <button class="btn-update-download" onclick="updateChecker.openDownload()">
-                        Descargar para ${platformName}
+                        ${downloadBtnText}
                     </button>
                 </div>
             </div>
@@ -377,7 +417,7 @@ class UpdateChecker {
     openDownload() {
         if (!this.updateInfo) return;
 
-        const platform = this.updateInfo.currentPlatform || 'linux';
+        const platform = this.platform;
         const platformDl = this.updateInfo.downloads?.[platform];
         const url = platformDl?.url || this.updateInfo.downloadUrl;
 
