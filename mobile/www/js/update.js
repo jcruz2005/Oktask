@@ -173,7 +173,7 @@ class UpdateChecker {
         const data = this.updateInfo;
         const changelog = data.changelog || [];
         const platform = data.currentPlatform || 'linux';
-        const platformName = platform === 'windows' ? 'Windows' : platform === 'macos' ? 'macOS' : 'Linux';
+        const platformName = platform === 'android' ? 'Android' : platform === 'windows' ? 'Windows' : platform === 'macos' ? 'macOS' : 'Linux';
         const platformDl = data.downloads?.[platform];
         const downloadUrl = platformDl?.url || data.downloadUrl;
         const installCmd = platformDl?.installCommand || '';
