@@ -118,11 +118,14 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
+          packages: 'platforms;android-35 build-tools;35.0.0'
 
-      - name: Install Android SDK platforms
+      - name: Downgrade SDK for CI compatibility
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-37" "build-tools;37.0.0"
+          sed -i 's/compileSdkVersion = 37/compileSdkVersion = 35/' mobile/android/variables.gradle
+          sed -i 's/targetSdkVersion = 37/targetSdkVersion = 35/' mobile/android/variables.gradle
 
       - name: Copy frontend to mobile/www
         run: |
