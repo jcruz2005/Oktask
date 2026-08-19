@@ -127,6 +127,8 @@ jobs:
         run: |
           rm -rf mobile/www
           cp -r src/main/resources/static mobile/www
+          # Overlay mobile-specific files
+          cp -r mobile/overrides/* mobile/www/
 
       - name: Sync Capacitor
         working-directory: mobile
