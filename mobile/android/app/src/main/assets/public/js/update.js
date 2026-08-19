@@ -33,8 +33,27 @@ class UpdateChecker {
             // Animación de loading en el botón
             if (btn) btn.classList.add('spinning');
 
-            const response = await fetch('/api/update/check');
-            const data = await response.json();
+            let data;
+            const isMobile = window.Capacitor != null;
+
+            if (isMobile) {
+                // En mobile, fetch directo desde GitHub
+                const resp = await fetch('https://raw.githubusercontent.com/jcruz2005/Oktask/main/version.json');
+                const versionData = await resp.json();
+                const currentVersion = '1.2.0';
+                data = {
+                    hasUpdate: versionData.version !== currentVersion,
+                    currentVersion: currentVersion,
+                    version: versionData.version,
+                    releaseDate: versionData.releaseDate,
+                    changelog: versionData.changelog,
+                    downloads: versionData.downloads,
+                    currentPlatform: 'android'
+                };
+            } else {
+                const response = await fetch(`/api/update/check?platform=${this.platform}`);
+                data = await response.json();
+            }
 
             if (btn) btn.classList.remove('spinning');
 
