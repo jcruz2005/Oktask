@@ -118,16 +118,14 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0'
+          accept-android-sdk-licenses: true
 
-      - name: Downgrade SDK for CI compatibility
+      - name: Fix SDK version for CI
         run: |
-          sed -i 's/compileSdkVersion = 37/compileSdkVersion = 34/' mobile/android/variables.gradle
-          sed -i 's/targetSdkVersion = 37/targetSdkVersion = 34/' mobile/android/variables.gradle
-          sed -i "s/androidxAppCompatVersion = '1.7.1'/androidxAppCompatVersion = '1.6.1'/" mobile/android/variables.gradle
-          sed -i "s/androidxCoreVersion = '1.17.0'/androidxCoreVersion = '1.12.0'/" mobile/android/variables.gradle
-          sed -i "s/androidxActivityVersion = '1.11.0'/androidxActivityVersion = '1.8.2'/" mobile/android/variables.gradle
-          sed -i "s/androidxFragmentVersion = '1.8.9'/androidxFragmentVersion = '1.6.2'/" mobile/android/variables.gradle
-          sed -i "s/androidxCoordinatorLayoutVersion = '1.3.0'/androidxCoordinatorLayoutVersion = '1.2.0'/" mobile/android/variables.gradle
+          sed -i 's/compileSdkVersion = 34/compileSdkVersion = 35/' mobile/android/variables.gradle
+          sed -i 's/targetSdkVersion = 34/targetSdkVersion = 35/' mobile/android/variables.gradle
 
       - name: Copy frontend to mobile/www
         run: |
