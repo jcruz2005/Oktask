@@ -120,7 +120,9 @@ jobs:
         uses: android-actions/setup-android@v4
 
       - name: Install Android SDK 35
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Copy frontend to mobile/www
         run: |
