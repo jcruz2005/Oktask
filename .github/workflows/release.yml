@@ -121,8 +121,15 @@ jobs:
 
       - name: Install Android SDK 35
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls -la $ANDROID_HOME/ 2>/dev/null || echo "No ANDROID_HOME"
+          ls -la $ANDROID_HOME/platforms/ 2>/dev/null || echo "No platforms"
+          ls -la $ANDROID_HOME/cmdline-tools/ 2>/dev/null || echo "No cmdline-tools"
+          which sdkmanager 2>/dev/null || echo "sdkmanager not in PATH"
+          yes | sdkmanager --licenses 2>/dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" 2>&1
+          echo "Installed platforms:"
+          ls -la $ANDROID_HOME/platforms/ 2>/dev/null
 
       - name: Copy frontend to mobile/www
         run: |
