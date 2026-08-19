@@ -399,7 +399,7 @@ class UpdateChecker {
     /**
      * Abre la URL de descarga para la plataforma actual
      */
-    openDownload() {
+    async openDownload() {
         if (!this.updateInfo) return;
 
         const platform = this.updateInfo.currentPlatform || 'linux';
@@ -407,7 +407,13 @@ class UpdateChecker {
         const url = platformDl?.url || this.updateInfo.downloadUrl;
 
         if (url) {
-            window.open(url, '_blank');
+            if (window.Capacitor) {
+                // En mobile, abrir en navegador nativo para que descargue e instale el APK
+                const { Browser } = await import('@capacitor/browser');
+                await Browser.open({ url });
+            } else {
+                window.open(url, '_blank');
+            }
         }
         this.closeModal();
     }
