@@ -255,6 +255,7 @@ public class NativeLauncher extends Application {
         primaryStage.setTitle(APP_TITLE);
         primaryStage.setMinWidth(MIN_WIDTH);
         primaryStage.setMinHeight(MIN_HEIGHT);
+        primaryStage.setMaximized(true);
         primaryStage.getIcons().addAll(loadAppIcons());
         primaryStage.setOnCloseRequest(e -> {
             if (webEngine != null && webEngine.getLoadWorker() != null) {
