@@ -109,8 +109,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: Android-Ios
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -123,7 +121,7 @@ jobs:
 
       - name: Install Android SDK platforms
         run: |
-          sdkmanager "platforms;android-37" "build-tools;36.0.0"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-37" "build-tools;36.0.0" || true
 
       - name: Copy frontend to mobile/www
         run: |
