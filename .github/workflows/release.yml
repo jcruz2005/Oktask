@@ -70,22 +70,28 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
 
-      - name: Build
+      - name: Build Windows
+        shell: cmd
         run: |
           mvn clean package -DskipTests -q
-          cmd /c build-windows.bat
+          call build-windows.bat
 
       - name: Package Windows
-        shell: pwsh
+        shell: cmd
         run: |
-          $VERSION = "${{ github.ref_name }}" -replace '^v',''
-          Compress-Archive -Path "target/installers/OKtask" -DestinationPath "OKtask-${VERSION}-windows-x64.zip"
+          dir target\installers 2>nul || echo "NO INSTALLERS DIR"
+          if exist target\installers\OKtask (
+            powershell -Command "Compress-Archive -Path 'target\installers\OKtask' -DestinationPath 'OKtask-windows-x64.zip'"
+          ) else (
+            echo "Build failed - no output directory"
+            exit /b 1
+          )
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-x64
-          path: OKtask-*-windows-x64.zip
+          path: OKtask-windows-x64.zip
 
   build-macos:
     runs-on: macos-latest
