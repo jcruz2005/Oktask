@@ -1,33 +1,32 @@
 {
-  "version": "1.2.1",
+  "version": "1.2.3",
   "releaseDate": "2026-08-19",
   "changelog": [
-    "Soporte multiplataforma: Linux, Windows, macOS y Android",
-    "Sistema de actualizaciones con detección automática de SO",
-    "GitHub Actions para builds automáticos en las 4 plataformas",
-    "Instrucciones de instalación por plataforma en el modal de actualización",
-    "Descarga directa de APK en Android",
-    "Mejoras en el sistema de notificaciones"
+    "Sistema de actualizaciones con descarga e instalación directa desde la app en Android",
+    "Notificaciones al iniciar pomodoro, completarlo y terminar descanso",
+    "Fix: teclas 1-4 ya no cambian de pestaña al escribir en campos de configuración",
+    "Fix: muestra 'Android' en vez de 'Linux' en el modal de actualización",
+    "Permisos de instalación de APK para Android"
   ],
   "downloads": {
     "linux": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.1/OKtask-1.2.1-linux-x64.tar.gz",
-      "filename": "OKtask-1.2.1-linux-x64.tar.gz",
-      "installCommand": "tar -xzf OKtask-1.2.1-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.3/OKtask-1.2.3-linux-x64.tar.gz",
+      "filename": "OKtask-1.2.3-linux-x64.tar.gz",
+      "installCommand": "tar -xzf OKtask-1.2.3-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
     },
     "windows": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.1/OKtask-1.2.1-windows-x64.msi",
-      "filename": "OKtask-1.2.1-windows-x64.msi",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.3/OKtask-1.2.3-windows-x64.msi",
+      "filename": "OKtask-1.2.3-windows-x64.msi",
       "installCommand": ""
     },
     "macos": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.1/OKtask-1.2.1-macos-arm64.dmg",
-      "filename": "OKtask-1.2.1-macos-arm64.dmg",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.3/OKtask-1.2.3-macos-arm64.dmg",
+      "filename": "OKtask-1.2.3-macos-arm64.dmg",
       "installCommand": ""
     },
     "android": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.1/OKtask-1.2.1-android.apk",
-      "filename": "OKtask-1.2.1-android.apk",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.3/OKtask-1.2.3-android.apk",
+      "filename": "OKtask-1.2.3-android.apk",
       "installCommand": ""
     }
   },

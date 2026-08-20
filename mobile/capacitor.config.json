@@ -3,9 +3,13 @@
   "appName": "OKtask",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "cleartext": true
   },
   "plugins": {
+    "Http": {
+      "enabled": true
+    },
     "LocalNotifications": {
       "smallIcon": "ic_stat_icon_config_sample",
       "iconColor": "#7C3AED"

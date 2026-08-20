@@ -40,7 +40,7 @@ class UpdateChecker {
                 // En mobile, fetch directo desde GitHub
                 const resp = await fetch('https://raw.githubusercontent.com/jcruz2005/Oktask/main/version.json');
                 const versionData = await resp.json();
-                const currentVersion = '1.2.0';
+                const currentVersion = '1.2.3';
                 data = {
                     hasUpdate: versionData.version !== currentVersion,
                     currentVersion: currentVersion,
@@ -397,7 +397,42 @@ class UpdateChecker {
     }
 
     /**
-     * Abre la URL de descarga para la plataforma actual
+     * Muestra un indicador de progreso de descarga
+     */
+    showDownloadProgress(message) {
+        this._progressEl = document.createElement('div');
+        this._progressEl.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; align-items: center;
+            justify-content: center; z-index: 20000;
+        `;
+        this._progressEl.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 32px; text-align: center; min-width: 280px;">
+                <div style="font-size: 36px; margin-bottom: 16px;">📥</div>
+                <div style="font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px;">${message}</div>
+                <div style="width: 100%; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; margin-top: 12px;">
+                    <div class="download-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #7C3AED, #6D28D9); border-radius: 3px; transition: width 0.3s;"></div>
+                </div>
+                <div class="download-progress-text" style="font-size: 12px; color: #9ca3af; margin-top: 8px;">Preparando...</div>
+            </div>
+        `;
+        document.body.appendChild(this._progressEl);
+    }
+
+    updateDownloadProgress(percent, text) {
+        const bar = this._progressEl?.querySelector('.download-progress-bar');
+        const txt = this._progressEl?.querySelector('.download-progress-text');
+        if (bar) bar.style.width = percent + '%';
+        if (txt) txt.textContent = text;
+    }
+
+    hideDownloadProgress() {
+        this._progressEl?.remove();
+        this._progressEl = null;
+    }
+
+    /**
+     * Descarga e instala el APK directamente desde la app (solo Android)
      */
     async openDownload() {
         if (!this.updateInfo) return;
@@ -406,16 +441,31 @@ class UpdateChecker {
         const platformDl = this.updateInfo.downloads?.[platform];
         const url = platformDl?.url || this.updateInfo.downloadUrl;
 
-        if (url) {
-            if (window.Capacitor) {
-                // En mobile, abrir en navegador nativo para que descargue e instale el APK
-                const { Browser } = await import('@capacitor/browser');
-                await Browser.open({ url });
-            } else {
-                window.open(url, '_blank');
+        if (!url) return;
+
+        // En mobile Android, descarga directa e instalación
+        if (window.Capacitor && platform === 'android') {
+            this.closeModal();
+            this.showDownloadProgress('Descargando e instalando...');
+
+            try {
+                const ApkInstaller = Capacitor.Plugins.ApkInstaller;
+                const fileName = `OKtask-${this.updateInfo.version}.apk`;
+                await ApkInstaller.downloadAndInstall({ url, fileName });
+
+                this.hideDownloadProgress();
+
+            } catch (error) {
+                this.hideDownloadProgress();
+                console.error('Error installing APK:', error);
+                this.showToastMessage('Error al instalar: ' + error.message, 'error');
             }
+
+        } else {
+            // Desktop: abrir en navegador
+            window.open(url, '_blank');
+            this.closeModal();
         }
-        this.closeModal();
     }
 }
 
