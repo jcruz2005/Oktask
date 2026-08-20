@@ -38,11 +38,18 @@ jobs:
           mvn clean package -DskipTests -q
           bash build-linux.sh
 
+      - name: Package Linux
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          cd target/installers
+          tar -czf "../../OKtask-${VERSION}-linux-x64.tar.gz" OKtask
+          cd ../..
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-x64
-          path: target/OKtask-*-linux-x64.tar.gz
+          path: OKtask-*-linux-x64.tar.gz
 
   build-windows:
     runs-on: windows-latest
@@ -68,11 +75,16 @@ jobs:
           mvn clean package -DskipTests -q
           cmd /c build-windows.bat
 
+      - name: Package Windows
+        run: |
+          $VERSION=${env:GITHUB_REF_NAME} -replace '^v',''
+          Compress-Archive -Path "target/installers/OKtask" -DestinationPath "OKtask-${VERSION}-windows-x64.zip"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-x64
-          path: target/installers/OKtask-*.msi
+          path: OKtask-*-windows-x64.zip
 
   build-macos:
     runs-on: macos-latest
@@ -98,11 +110,18 @@ jobs:
           mvn clean package -DskipTests -q
           bash build-macos.sh
 
+      - name: Package macOS
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          cd target/installers
+          zip -r "../../OKtask-${VERSION}-macos-arm64.zip" OKtask.app
+          cd ../..
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-arm64
-          path: target/installers/OKtask-*.dmg
+          path: OKtask-*-macos-arm64.zip
 
   build-android:
     runs-on: ubuntu-latest
@@ -192,7 +211,7 @@ jobs:
         with:
           files: |
             linux-x64/OKtask-*.tar.gz
-            windows-x64/OKtask-*.msi
-            macos-arm64/OKtask-*.dmg
+            windows-x64/OKtask-*.zip
+            macos-arm64/OKtask-*.zip
             android-apk/OKtask-*-android.apk
           generate_release_notes: true
