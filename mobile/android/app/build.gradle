@@ -1,7 +1,8 @@
 apply plugin: 'com.android.application'
 
 // Generar versionCode a partir de versionName (ej: "1.2.3" -> 10203)
-def versionFile = file('../version.json')
+def rootDir = project.projectDir.absolutePath
+def versionFile = file("${rootDir}/../../../version.json")
 if (versionFile.exists()) {
     def json = new groovy.json.JsonSlurper().parseText(versionFile.text)
     def parts = json.version.split('\\.')
