@@ -1,5 +1,17 @@
 apply plugin: 'com.android.application'
 
+// Generar versionCode a partir de versionName (ej: "1.2.3" -> 10203)
+def versionFile = file('../version.json')
+if (versionFile.exists()) {
+    def json = new groovy.json.JsonSlurper().parseText(versionFile.text)
+    def parts = json.version.split('\\.')
+    ext.appVersionCode = parts[0].toInteger() * 10000 + parts[1].toInteger() * 100 + parts[2].toInteger()
+    ext.appVersionName = json.version
+} else {
+    ext.appVersionCode = 1
+    ext.appVersionName = "1.0.0"
+}
+
 android {
     namespace = "com.oktask.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +19,8 @@ android {
         applicationId "com.oktask.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode rootProject.ext.appVersionCode
+        versionName rootProject.ext.appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
