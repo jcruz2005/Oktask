@@ -76,8 +76,9 @@ jobs:
           cmd /c build-windows.bat
 
       - name: Package Windows
+        shell: pwsh
         run: |
-          $VERSION=${env:GITHUB_REF_NAME} -replace '^v',''
+          $VERSION = "${{ github.ref_name }}" -replace '^v',''
           Compress-Archive -Path "target/installers/OKtask" -DestinationPath "OKtask-${VERSION}-windows-x64.zip"
 
       - name: Upload artifact
