@@ -40,7 +40,7 @@ class UpdateChecker {
                 // En mobile, fetch directo desde GitHub
                 const resp = await fetch('https://raw.githubusercontent.com/jcruz2005/Oktask/main/version.json');
                 const versionData = await resp.json();
-                const currentVersion = '1.2.5';
+                const currentVersion = '1.2.6';
                 data = {
                     hasUpdate: versionData.version !== currentVersion,
                     currentVersion: currentVersion,

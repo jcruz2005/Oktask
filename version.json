@@ -1,5 +1,5 @@
 {
-  "version": "1.2.5",
+  "version": "1.2.6",
   "releaseDate": "2026-08-20",
   "changelog": [
     "Se corrigió el conflicto de firmas Android: ahora todos los APKs usan la misma firma digital",
@@ -9,23 +9,23 @@
   ],
   "downloads": {
     "linux": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.5/OKtask-1.2.5-linux-x64.tar.gz",
-      "filename": "OKtask-1.2.5-linux-x64.tar.gz",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.6/OKtask-1.2.6-linux-x64.tar.gz",
+      "filename": "OKtask-1.2.6-linux-x64.tar.gz",
       "installCommand": "tar -xzf OKtask-1.2.5-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
     },
     "windows": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.5/OKtask-1.2.5-windows-x64.msi",
-      "filename": "OKtask-1.2.5-windows-x64.msi",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.6/OKtask-1.2.6-windows-x64.msi",
+      "filename": "OKtask-1.2.6-windows-x64.msi",
       "installCommand": ""
     },
     "macos": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.5/OKtask-1.2.5-macos-arm64.dmg",
-      "filename": "OKtask-1.2.5-macos-arm64.dmg",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.6/OKtask-1.2.6-macos-arm64.dmg",
+      "filename": "OKtask-1.2.6-macos-arm64.dmg",
       "installCommand": ""
     },
     "android": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.5/OKtask-1.2.5-android.apk",
-      "filename": "OKtask-1.2.5-android.apk",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.6/OKtask-1.2.6-android.apk",
+      "filename": "OKtask-1.2.6-android.apk",
       "installCommand": ""
     }
   },
