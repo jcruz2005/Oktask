@@ -443,33 +443,17 @@ class UpdateChecker {
 
         if (!url) return;
 
-        // En mobile Android, descarga directa e instalación
+        // En mobile Android, abrir en navegador para descargar APK
         if (window.Capacitor && platform === 'android') {
             this.closeModal();
-
-            // Intentar plugin nativo de instalación directa
-            const ApkInstaller = Capacitor.Plugins?.ApkInstaller;
-            if (ApkInstaller && typeof ApkInstaller.downloadAndInstall === 'function') {
-                this.showDownloadProgress('Descargando e instalando...');
-                try {
-                    const fileName = `OKtask-${this.updateInfo.version}.apk`;
-                    await ApkInstaller.downloadAndInstall({ url, fileName });
-                    this.hideDownloadProgress();
-                } catch (error) {
-                    this.hideDownloadProgress();
-                    console.error('Error installing APK:', error);
-                    this.showToastMessage('Error al instalar: ' + error.message, 'error');
-                }
-            } else {
-                // Fallback: abrir en navegador del sistema
-                console.log('ApkInstaller plugin not available, opening browser');
-                const Browser = Capacitor.Plugins?.Browser;
-                if (Browser && typeof Browser.open === 'function') {
-                    await Browser.open({ url });
-                } else {
-                    window.open(url, '_system');
-                }
-            }
+            // Crear enlace invisible y simular click para descargar
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `OKtask-${this.updateInfo.version}.apk`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
 
         } else {
             // Desktop: abrir en navegador
