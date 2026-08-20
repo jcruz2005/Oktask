@@ -446,19 +446,29 @@ class UpdateChecker {
         // En mobile Android, descarga directa e instalación
         if (window.Capacitor && platform === 'android') {
             this.closeModal();
-            this.showDownloadProgress('Descargando e instalando...');
 
-            try {
-                const ApkInstaller = Capacitor.Plugins.ApkInstaller;
-                const fileName = `OKtask-${this.updateInfo.version}.apk`;
-                await ApkInstaller.downloadAndInstall({ url, fileName });
-
-                this.hideDownloadProgress();
-
-            } catch (error) {
-                this.hideDownloadProgress();
-                console.error('Error installing APK:', error);
-                this.showToastMessage('Error al instalar: ' + error.message, 'error');
+            // Intentar plugin nativo de instalación directa
+            const ApkInstaller = Capacitor.Plugins?.ApkInstaller;
+            if (ApkInstaller && typeof ApkInstaller.downloadAndInstall === 'function') {
+                this.showDownloadProgress('Descargando e instalando...');
+                try {
+                    const fileName = `OKtask-${this.updateInfo.version}.apk`;
+                    await ApkInstaller.downloadAndInstall({ url, fileName });
+                    this.hideDownloadProgress();
+                } catch (error) {
+                    this.hideDownloadProgress();
+                    console.error('Error installing APK:', error);
+                    this.showToastMessage('Error al instalar: ' + error.message, 'error');
+                }
+            } else {
+                // Fallback: abrir en navegador del sistema
+                console.log('ApkInstaller plugin not available, opening browser');
+                const Browser = Capacitor.Plugins?.Browser;
+                if (Browser && typeof Browser.open === 'function') {
+                    await Browser.open({ url });
+                } else {
+                    window.open(url, '_system');
+                }
             }
 
         } else {
