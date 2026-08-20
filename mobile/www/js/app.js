@@ -258,8 +258,11 @@ class App {
                 });
             }
 
-            // 1-4: Cambiar de tab (sin Ctrl)
+            // 1-4: Cambiar de tab (sin Ctrl, solo si no está escribiendo en un input)
             if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+                const tag = e.target.tagName;
+                const editable = e.target.isContentEditable;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || editable) return;
                 if (e.key === '1') this.navegarA('dashboard');
                 if (e.key === '2') this.navegarA('materias');
                 if (e.key === '3') this.navegarA('tareas');
