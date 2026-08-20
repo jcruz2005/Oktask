@@ -1,33 +1,31 @@
 {
-  "version": "1.2.4",
+  "version": "1.2.5",
   "releaseDate": "2026-08-20",
   "changelog": [
-    "Se arreglo el bug de que no se podia poner materia 'Estudio geopolitico de groenlandia' (límite de caracteres aumentado a 255)",
-    "Codigo de materia ahora acepta hasta 15 caracteres para codigos como 'GEO-2024-A'",
+    "Se corrigió el conflicto de firmas Android: ahora todos los APKs usan la misma firma digital",
     "Descarga de actualizaciones ahora funciona correctamente en Android",
-    "Sistema de notificaciones para pomodoro mejorado: se muestra al iniciar, completar y al terminar el descanso",
-    "Se corrigio que las teclas 1-4 cambiaban de pestaña al escribir en campos de configuracion del pomodoro",
-    "Mejoras de estabilidad en el sistema de actualizaciones multiplataforma"
+    "Se mejoró la estabilidad del sistema de actualizaciones",
+    "Se optimizó el proceso de build para Android"
   ],
   "downloads": {
     "linux": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.4/OKtask-1.2.4-linux-x64.tar.gz",
-      "filename": "OKtask-1.2.4-linux-x64.tar.gz",
-      "installCommand": "tar -xzf OKtask-1.2.4-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.5/OKtask-1.2.5-linux-x64.tar.gz",
+      "filename": "OKtask-1.2.5-linux-x64.tar.gz",
+      "installCommand": "tar -xzf OKtask-1.2.5-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
     },
     "windows": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.4/OKtask-1.2.4-windows-x64.msi",
-      "filename": "OKtask-1.2.4-windows-x64.msi",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.5/OKtask-1.2.5-windows-x64.msi",
+      "filename": "OKtask-1.2.5-windows-x64.msi",
       "installCommand": ""
     },
     "macos": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.4/OKtask-1.2.4-macos-arm64.dmg",
-      "filename": "OKtask-1.2.4-macos-arm64.dmg",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.5/OKtask-1.2.5-macos-arm64.dmg",
+      "filename": "OKtask-1.2.5-macos-arm64.dmg",
       "installCommand": ""
     },
     "android": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.4/OKtask-1.2.4-android.apk",
-      "filename": "OKtask-1.2.4-android.apk",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.5/OKtask-1.2.5-android.apk",
+      "filename": "OKtask-1.2.5-android.apk",
       "installCommand": ""
     }
   },
