@@ -412,7 +412,7 @@ class UpdateChecker {
     }
 
     /**
-     * Abre la URL de descarga para la plataforma actual
+     * Abre la URL de descarga en el navegador del sistema
      */
     openDownload() {
         if (!this.updateInfo) return;
@@ -421,10 +421,36 @@ class UpdateChecker {
         const platformDl = this.updateInfo.downloads?.[platform];
         const url = platformDl?.url || this.updateInfo.downloadUrl;
 
-        if (url) {
-            window.open(url, '_blank');
+        if (!url) return;
+
+        // En mobile, abrir en navegador del sistema
+        if (window.Capacitor && platform === 'android') {
+            this.closeModal();
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `OKtask-${this.updateInfo.version}.apk`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            // Desktop: abrir en navegador del sistema via endpoint Java
+            this.closeModal();
+            fetch(`/api/update/open-url?url=${encodeURIComponent(url)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        this.showToastMessage('Abriendo en el navegador del sistema...', 'success');
+                    } else {
+                        this.showToastMessage('Error al abrir: ' + (data.error || 'Desconocido'), 'error');
+                    }
+                })
+                .catch(err => {
+                    // Fallback: abrir en nueva pestaña
+                    console.warn('Endpoint open-url no disponible, usando fallback:', err);
+                    window.open(url, '_blank');
+                });
         }
-        this.closeModal();
     }
 }
 
