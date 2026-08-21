@@ -420,35 +420,44 @@ class UpdateChecker {
         const platform = this.platform;
         const platformDl = this.updateInfo.downloads?.[platform];
         const url = platformDl?.url || this.updateInfo.downloadUrl;
+        const filename = platformDl?.filename || '';
 
         if (!url) return;
 
-        // En mobile, abrir en navegador del sistema
+        // En mobile Android, descargar y abrir APK
         if (window.Capacitor && platform === 'android') {
             this.closeModal();
             const a = document.createElement('a');
             a.href = url;
-            a.download = `OKtask-${this.updateInfo.version}.apk`;
+            a.download = filename;
             a.style.display = 'none';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
         } else {
-            // Desktop: abrir en navegador del sistema via endpoint Java
+            // Desktop: instalación automática via endpoint Java
             this.closeModal();
-            fetch(`/api/update/open-url?url=${encodeURIComponent(url)}`)
+            this.showDownloadProgress('Descargando e instalando...');
+
+            fetch(`/api/update/install?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}&platform=${platform}`)
                 .then(r => r.json())
                 .then(data => {
+                    this.hideDownloadProgress();
                     if (data.success) {
-                        this.showToastMessage('Abriendo en el navegador del sistema...', 'success');
+                        this.showToastMessage(
+                            `✅ Instalado en: ${data.installPath}\nReiniciá para usar la nueva versión.`,
+                            'success'
+                        );
                     } else {
-                        this.showToastMessage('Error al abrir: ' + (data.error || 'Desconocido'), 'error');
+                        this.showToastMessage('Error: ' + (data.error || 'No se pudo instalar'), 'error');
                     }
                 })
                 .catch(err => {
-                    // Fallback: abrir en nueva pestaña
-                    console.warn('Endpoint open-url no disponible, usando fallback:', err);
-                    window.open(url, '_blank');
+                    this.hideDownloadProgress();
+                    console.error('Install error:', err);
+                    // Fallback: abrir en navegador
+                    this.showToastMessage('Instalación automática falló. Intentando abrir en navegador...', 'info');
+                    fetch(`/api/update/open-url?url=${encodeURIComponent(url)}`);
                 });
         }
     }
