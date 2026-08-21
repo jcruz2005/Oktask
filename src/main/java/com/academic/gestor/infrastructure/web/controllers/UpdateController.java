@@ -35,7 +35,7 @@ public class UpdateController {
     private static final Logger log = LoggerFactory.getLogger(UpdateController.class);
 
     /** Versión actual de la aplicación (debe coincidir con NativeLauncher). */
-    private static final String APP_VERSION = "1.2.10";
+    private static final String APP_VERSION = "1.2.11";
 
     private final UpdateChecker updateChecker;
 
@@ -304,15 +304,19 @@ public class UpdateController {
     }
 
     /**
-     * Instala en macOS: extrae a ~/Applications/OKtask/.
+     * Instala en macOS: extrae a ~/Applications/OKtask/, crea symlink y elimina quarantine.
      */
     private String installMacOS(Path archive, String filename) throws IOException {
-        Path installDir = Paths.get(System.getProperty("user.home"), "Applications", "OKtask");
+        Path applicationsDir = Paths.get(System.getProperty("user.home"), "Applications");
+        Path installDir = applicationsDir.resolve("OKtask");
 
+        // Crear ~/Applications si no existe
+        Files.createDirectories(applicationsDir);
+
+        // Limpiar instalación anterior
         if (Files.exists(installDir)) {
             deleteDirectory(installDir);
         }
-        Files.createDirectories(installDir);
 
         if (filename.endsWith(".zip")) {
             extractZip(archive, installDir);
@@ -320,22 +324,50 @@ public class UpdateController {
             extractTarGz(archive, installDir);
         }
 
-        // En macOS, intentar crear un alias en el escritorio
-        Path desktop = Paths.get(System.getProperty("user.home"), "Desktop");
+        // Buscar el bundle .app
         Path appBundle = findAppBundle(installDir);
-        if (appBundle != null && Files.exists(desktop)) {
-            Path alias = desktop.resolve("OKtask.app");
-            Files.deleteIfExists(alias);
-            // No podemos crear aliases reales fácilmente, así que copiamos el .app
-            copyDirectory(appBundle, alias);
-            log.info("App copiada al escritorio: {}", alias);
+        if (appBundle == null) {
+            // Si no hay .app, buscar ejecutable en bin/
+            Path launcher = findLauncher(installDir, "OKtask");
+            if (launcher != null) {
+                log.info("Ejecutable encontrado: {}", launcher);
+            }
+            return installDir.toString();
         }
 
-        return installDir.toString();
+        // Eliminar quarantine (Gatekeeper) para que macOS no bloquee la app
+        removeQuarantine(appBundle);
+
+        // Crear symlink en el escritorio (más rápido que copiar)
+        Path desktop = Paths.get(System.getProperty("user.home"), "Desktop");
+        if (Files.exists(desktop)) {
+            Path desktopLink = desktop.resolve("OKtask.app");
+            Files.deleteIfExists(desktopLink);
+            if (Files.isDirectory(desktopLink)) {
+                deleteDirectory(desktopLink);
+            }
+            // Usar ditto para copiar preservando metadatos (mejor que Files.copy)
+            copyAppBundle(appBundle, desktopLink);
+            log.info("App copiada al escritorio: {}", desktopLink);
+        }
+
+        // Crear symlink en /usr/local/bin/ si existe
+        Path localBin = Paths.get("/usr/local/bin");
+        if (Files.exists(localBin) && Files.isDirectory(localBin)) {
+            Path launcher = findLauncher(appBundle, "OKtask");
+            if (launcher != null) {
+                Path symlink = localBin.resolve("oktask");
+                Files.deleteIfExists(symlink);
+                Files.createSymbolicLink(symlink, launcher);
+                log.info("Symlink creado: {} -> {}", symlink, launcher);
+            }
+        }
+
+        return appBundle.toString();
     }
 
     /**
-     * Instala en Windows: extrae a %LOCALAPPDATA%\OKtask\.
+     * Instala en Windows: extrae a %LOCALAPPDATA%\OKtask\, crea acceso directo real.
      */
     private String installWindows(Path archive, String filename) throws IOException {
         String localAppData = System.getenv("LOCALAPPDATA");
@@ -344,6 +376,7 @@ public class UpdateController {
         }
         Path installDir = Paths.get(localAppData, "OKtask");
 
+        // Limpiar instalación anterior
         if (Files.exists(installDir)) {
             deleteDirectory(installDir);
         }
@@ -359,13 +392,20 @@ public class UpdateController {
             throw new IOException("No se encontró el ejecutable en el paquete extraído");
         }
 
-        // Crear acceso directo en el escritorio
+        // Crear acceso directo REAL en el escritorio via PowerShell
         Path desktop = Paths.get(System.getenv("USERPROFILE"), "Desktop");
         if (Files.exists(desktop)) {
             Path shortcut = desktop.resolve("OKtask.lnk");
-            createWindowsShortcut(launcher, shortcut);
+            createRealWindowsShortcut(launcher, shortcut);
             log.info("Acceso directo creado: {}", shortcut);
         }
+
+        // También crear en el Menú Inicio
+        Path startMenu = Paths.get(System.getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "OKtask");
+        Files.createDirectories(startMenu);
+        Path startShortcut = startMenu.resolve("OKtask.lnk");
+        createRealWindowsShortcut(launcher, startShortcut);
+        log.info("Menú Inicio creado: {}", startShortcut);
 
         return installDir.toString();
     }
@@ -469,6 +509,85 @@ public class UpdateController {
             Files.writeString(batPath, content);
         } catch (IOException e) {
             log.warn("No se pudo crear acceso directo Windows: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Elimina el attribute quarantine de macOS (Gatekeeper).
+     */
+    private void removeQuarantine(Path appBundle) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("xattr", "-d", "com.apple.quarantine", appBundle.toString());
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            process.waitFor();
+            log.info("Quarantine eliminado de: {}", appBundle);
+        } catch (Exception e) {
+            log.warn("No se pudo eliminar quarantine (puede que no exista): {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Copia un bundle .app usando ditto (preserva metadatos de macOS).
+     */
+    private void copyAppBundle(Path source, Path destination) throws IOException {
+        try {
+            // ditto es mejor que cp para bundles .app en macOS
+            ProcessBuilder pb = new ProcessBuilder("ditto", source.toString(), destination.toString());
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                while (reader.readLine() != null) { }
+            }
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                // Fallback: copiar manualmente
+                log.warn("ditto falló, usando copia manual");
+                copyDirectory(source, destination);
+            }
+        } catch (Exception e) {
+            log.warn("ditto no disponible, usando copia manual: {}", e.getMessage());
+            copyDirectory(source, destination);
+        }
+    }
+
+    /**
+     * Crea un acceso directo .lnk REAL en Windows via PowerShell.
+     */
+    private void createRealWindowsShortcut(Path target, Path shortcut) {
+        try {
+            String psScript = String.format("""
+                $WshShell = New-Object -ComObject WScript.Shell
+                $Shortcut = $WshShell.CreateShortcut('%s')
+                $Shortcut.TargetPath = '%s'
+                $Shortcut.WorkingDirectory = '%s'
+                $Shortcut.Description = 'OKtask - Gestor de tareas con Pomodoro'
+                $Shortcut.Save()
+                """,
+                shortcut.toAbsolutePath().toString().replace("\\", "\\\\"),
+                target.toAbsolutePath().toString().replace("\\", "\\\\"),
+                target.getParent().toAbsolutePath().toString().replace("\\", "\\\\")
+            );
+
+            ProcessBuilder pb = new ProcessBuilder("powershell", "-Command", psScript);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                while (reader.readLine() != null) { }
+            }
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                // Fallback: crear .bat
+                log.warn("PowerShell falló, creando .bat como fallback");
+                createWindowsShortcut(target, shortcut);
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo crear .lnk real, creando .bat: {}", e.getMessage());
+            try {
+                createWindowsShortcut(target, shortcut);
+            } catch (Exception ex) {
+                log.error("Error creando acceso directo: {}", ex.getMessage());
+            }
         }
     }
 
