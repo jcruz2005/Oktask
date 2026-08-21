@@ -186,7 +186,9 @@ public class UpdateChecker {
     private UpdateInfo fetchRemoteVersion() throws Exception {
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(versionUrl);
+            // Cache-buster para evitar caché de GitHub
+            String cacheBuster = versionUrl.contains("?") ? "&t=" : "?t=";
+            URL url = new URL(versionUrl + cacheBuster + System.currentTimeMillis());
             connection = (HttpURLConnection) url.openConnection();
             connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
             connection.setReadTimeout(READ_TIMEOUT_MS);
