@@ -291,6 +291,9 @@ public class UpdateController {
         Files.createDirectories(binDir);
         Path symlink = binDir.resolve("oktask");
         Files.deleteIfExists(symlink);
+        if (Files.isDirectory(symlink)) {
+            deleteDirectory(symlink);
+        }
         Files.createSymbolicLink(symlink, launcher);
         log.info("Symlink creado: {} -> {}", symlink, launcher);
 
@@ -412,16 +415,18 @@ public class UpdateController {
     // ==================== MÉTODOS AUXILIARES ====================
 
     private Path findLauncher(Path dir, String name) throws IOException {
-        // Buscar ejecutable en el directorio
-        try (Stream<Path> walk = Files.walk(dir)) {
-            return walk.filter(p -> {
-                String fileName = p.getFileName().toString().toLowerCase();
-                return fileName.equals(name.toLowerCase()) ||
-                       fileName.equals(name.toLowerCase() + ".exe") ||
-                       fileName.equals(name.toLowerCase() + ".sh");
-            }).filter(Files::isExecutable)
-              .findFirst()
-              .orElse(null);
+        // Buscar ejecutable en subdirectorio bin/ primero
+        Path binDir = dir.resolve(name).resolve("bin").resolve(name);
+        if (Files.exists(binDir) && Files.isExecutable(binDir)) {
+            return binDir;
+        }
+        // Buscar en directorios bin/ anidados
+        try (Stream<Path> walk = Files.walk(dir, 4)) {
+            return walk.filter(p -> p.toString().contains("/bin/" + name))
+                       .filter(Files::isExecutable)
+                       .filter(p -> !Files.isDirectory(p))
+                       .findFirst()
+                       .orElse(null);
         }
     }
 
