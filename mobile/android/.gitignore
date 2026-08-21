@@ -1,0 +1,18 @@
+# Android build artifacts
+build/
+.gradle/
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+capacitor-cordova-android-plugins/build/
+
+# Generated files
+app/build/
+capacitor-android/build/
+
+# IDE
+.idea/
+*.iml
+.vscode/

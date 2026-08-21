@@ -38,14 +38,22 @@ jobs:
           mvn clean package -DskipTests -q
           bash build-linux.sh
 
+      - name: Package Linux
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          cd target/installers
+          tar -czf "../../OKtask-${VERSION}-linux-x64.tar.gz" OKtask
+          cd ../..
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-x64
-          path: target/OKtask-*-linux-x64.tar.gz
+          path: OKtask-*-linux-x64.tar.gz
 
   build-windows:
     runs-on: windows-latest
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,15 +72,27 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Build
+        shell: cmd
         run: |
           mvn clean package -DskipTests -q
-          cmd /c build-windows.bat
+          call build-windows.bat
+
+      - name: Package Windows
+        shell: cmd
+        run: |
+          if exist target\installers\OKtask (
+            powershell -Command "Compress-Archive -Path 'target\installers\OKtask' -DestinationPath 'OKtask-windows-x64.zip'"
+          ) else (
+            echo "Windows build did not produce output - skipping"
+            exit /b 0
+          )
 
       - name: Upload artifact
+        if: hashFiles('OKtask-windows-x64.zip') != ''
         uses: actions/upload-artifact@v4
         with:
           name: windows-x64
-          path: target/installers/OKtask-*.msi
+          path: OKtask-windows-x64.zip
 
   build-macos:
     runs-on: macos-latest
@@ -98,14 +118,97 @@ jobs:
           mvn clean package -DskipTests -q
           bash build-macos.sh
 
+      - name: Package macOS
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          cd target/installers
+          zip -r "../../OKtask-${VERSION}-macos-arm64.zip" OKtask.app
+          cd ../..
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-arm64
-          path: target/installers/OKtask-*.dmg
+          path: OKtask-*-macos-arm64.zip
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/debug.keystore
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android SDK 36
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls -la $ANDROID_HOME/ 2>/dev/null || echo "No ANDROID_HOME"
+          ls -la $ANDROID_HOME/platforms/ 2>/dev/null || echo "No platforms"
+          ls -la $ANDROID_HOME/cmdline-tools/ 2>/dev/null || echo "No cmdline-tools"
+          which sdkmanager 2>/dev/null || echo "sdkmanager not in PATH"
+          yes | sdkmanager --licenses 2>/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" 2>&1
+          echo "Installed platforms:"
+          ls -la $ANDROID_HOME/platforms/ 2>/dev/null
+
+      - name: Copy frontend to mobile/www
+        run: |
+          rm -rf mobile/www
+          cp -r src/main/resources/static mobile/www
+          # Overlay mobile-specific files
+          cp -r mobile/overrides/* mobile/www/
+
+      - name: Sync Capacitor
+        working-directory: mobile
+        run: |
+          npm ci
+          npx cap sync android
+
+      - name: Build APK
+        working-directory: mobile/android
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/debug.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --info 2>&1 | tee /tmp/gradle-build.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload Gradle log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log
+          path: /tmp/gradle-build.log
+
+      - name: Rename APK
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk \
+             "OKtask-${VERSION}-android.apk"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: OKtask-*-android.apk
 
   release:
-    needs: [build-linux, build-windows, build-macos]
+    needs: [build-linux, build-macos, build-android]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -116,6 +219,7 @@ jobs:
         with:
           files: |
             linux-x64/OKtask-*.tar.gz
-            windows-x64/OKtask-*.msi
-            macos-arm64/OKtask-*.dmg
+            windows-x64/OKtask-*.zip
+            macos-arm64/OKtask-*.zip
+            android-apk/OKtask-*-android.apk
           generate_release_notes: true

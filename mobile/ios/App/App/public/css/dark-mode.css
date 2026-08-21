@@ -1,0 +1,178 @@
+/* ============================================
+   OKTASK
+   Modo Oscuro
+   ============================================ */
+
+[data-theme="dark"] {
+    /* Colores de fondo */
+    --bg-primary: #1E293B;
+    --bg-secondary: #0F172A;
+    --bg-tertiary: #334155;
+
+    /* Colores de texto */
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+
+    /* Bordes */
+    --border-color: #475569;
+
+    /* Sombras más oscuras */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+
+    /* Colores de estado más suaves */
+    --success-bg: #064E3B;
+    --warning-bg: #78350F;
+    --danger-bg: #7F1D1D;
+    --info-bg: #1E3A5F;
+}
+
+/* Header en modo oscuro */
+[data-theme="dark"] .header {
+    background: linear-gradient(135deg, #4C1D95 0%, #5B21B6 100%);
+}
+
+/* Botones en modo oscuro */
+[data-theme="dark"] .btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background: var(--border-color);
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-light);
+    color: var(--primary-light);
+}
+
+/* Formularios en modo oscuro */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--bg-tertiary);
+    border-color: var(--primary-light);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+/* Cards en modo oscuro */
+[data-theme="dark"] .card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .card-header {
+    border-bottom-color: var(--border-color);
+}
+
+/* Tabla en modo oscuro */
+[data-theme="dark"] .materias-table {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .materias-table th {
+    background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .materias-table td {
+    border-bottom-color: var(--border-color);
+}
+
+/* Task cards en modo oscuro */
+[data-theme="dark"] .task-card {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .task-card:hover {
+    border-color: var(--primary-light);
+}
+
+/* Materia cards en modo oscuro */
+[data-theme="dark"] .materia-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+}
+
+/* Task items en modo oscuro */
+[data-theme="dark"] .task-item,
+[data-theme="dark"] .session-item {
+    background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .task-item:hover,
+[data-theme="dark"] .session-item:hover {
+    background: var(--border-color);
+}
+
+/* Modales en modo oscuro */
+[data-theme="dark"] .modal-content {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--border-color);
+}
+
+/* Scrollbar en modo oscuro */
+[data-theme="dark"]::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+}
+
+[data-theme="dark"]::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+}
+
+[data-theme="dark"]::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Toast en modo oscuro */
+[data-theme="dark"] .toast {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .toast-header {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+/* Bootstrap overrides for dark mode */
+[data-theme="dark"] .btn-close {
+    filter: invert(1);
+}
+
+[data-theme="dark"] .form-select option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}

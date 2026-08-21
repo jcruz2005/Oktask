@@ -1,27 +1,31 @@
 {
-  "version": "1.2.0",
-  "releaseDate": "2026-08-17",
+  "version": "1.2.7",
+  "releaseDate": "2026-08-20",
   "changelog": [
-    "Soporte multiplataforma: Linux, Windows y macOS",
-    "Sistema de actualizaciones con detección automática de SO",
-    "GitHub Actions para builds automáticos en las 3 plataformas",
-    "Instrucciones de instalación por plataforma en el modal de actualización",
-    "Mejoras en el sistema de notificaciones"
+    "Se corrigió el conflicto de firmas Android: ahora todos los APKs usan la misma firma digital",
+    "Descarga de actualizaciones ahora funciona correctamente en Android",
+    "Se mejoró la estabilidad del sistema de actualizaciones",
+    "Se optimizó el proceso de build para Android"
   ],
   "downloads": {
     "linux": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.0/OKtask-1.2.0-linux-x64.tar.gz",
-      "filename": "OKtask-1.2.0-linux-x64.tar.gz",
-      "installCommand": "tar -xzf OKtask-1.2.0-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.7/OKtask-1.2.7-linux-x64.tar.gz",
+      "filename": "OKtask-1.2.7-linux-x64.tar.gz",
+      "installCommand": "tar -xzf OKtask-1.2.5-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
     },
     "windows": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.0/OKtask-1.2.0.msi",
-      "filename": "OKtask-1.2.0.msi",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.7/OKtask-1.2.7-windows-x64.zip",
+      "filename": "OKtask-1.2.7-windows-x64.zip",
       "installCommand": ""
     },
     "macos": {
-      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.0/OKtask-1.2.0.dmg",
-      "filename": "OKtask-1.2.0.dmg",
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.7/OKtask-1.2.7-macos-arm64.zip",
+      "filename": "OKtask-1.2.7-macos-arm64.zip",
+      "installCommand": ""
+    },
+    "android": {
+      "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.7/OKtask-1.2.7-android.apk",
+      "filename": "OKtask-1.2.7-android.apk",
       "installCommand": ""
     }
   },

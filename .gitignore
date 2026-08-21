@@ -6,6 +6,7 @@
 
 # Package Files
 *.jar
+!mobile/android/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
@@ -99,3 +100,12 @@ temp/
 *.swp
 *.swo
 *~
+
+# Mobile - Android
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/local.properties
+mobile/android/capacitor-cordova-android-plugins/build/
+mobile/node_modules/
+*.apk

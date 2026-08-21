@@ -447,6 +447,16 @@ class Pomodoro {
         
         this.mostrarBotones('trabajo');
         this.iniciarTemporizador();
+
+        // Notificar que el pomodoro ha comenzado
+        const duracion = this.configuracion.duracionTrabajo;
+        if (typeof notificador !== 'undefined') {
+            notificador.enviar('Pomodoro iniciado', {
+                body: `Sesión de trabajo: ${duracion} minutos`,
+                tag: 'pomodoro-iniciado',
+                icon: '/icons/icon-192.png'
+            });
+        }
     }
 
     /**
@@ -602,12 +612,22 @@ class Pomodoro {
             this.mostrarAlarmaPantallaCompleta('🍅 ¡Pomodoro completado!', 
                 `Completaste ${this.configuracion.duracionTrabajo} minutos de estudio.\nTomá un descanso.`);
             
+            // Notificar completado
+            if (typeof notificador !== 'undefined') {
+                notificador.notificarPomodoroCompletado(this.configuracion.duracionTrabajo);
+            }
+            
             setTimeout(() => {
                 this.iniciarDescanso();
             }, 5000);
         } else if (this.estado === 'descanso') {
             this.mostrarAlarmaPantallaCompleta('⏰ ¡Descanso terminado!', 
                 'Es hora de volver a estudiar.\n¿Listo para el siguiente pomodoro?');
+            
+            // Notificar descanso terminado
+            if (typeof notificador !== 'undefined') {
+                notificador.notificarDescansoTerminado();
+            }
             
             setTimeout(() => {
                 this.detener();

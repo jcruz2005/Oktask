@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OKtask</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Estilos propios -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dark-mode.css">
+    <link rel="stylesheet" href="css/pomodoro-modal.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SortableJS para Drag & Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <button class="btn btn-icon" id="btn-toggle-sidebar" title="Menú">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <i class="fas fa-graduation-cap header-icon"></i>
+                <h1 class="header-title">OKtask</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-icon" id="btn-check-update" title="Buscar actualizaciones" style="position: relative;">
+                    <i class="fas fa-sync-alt"></i>
+                    <span class="update-badge" id="update-badge" style="display: none; position: absolute; top: -2px; right: -2px; background: #EF4444; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; line-height: 16px; text-align: center;">!</span>
+                </button>
+                <button class="btn btn-icon" id="btn-exportar" title="Exportar datos">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="btn btn-icon" id="btn-theme-toggle" title="Cambiar tema">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav">
+            <div class="sidebar-item active" data-tab="dashboard">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="sidebar-item" data-tab="materias">
+                <i class="fas fa-book"></i>
+                <span>Materias</span>
+            </div>
+            <div class="sidebar-item" data-tab="tareas">
+                <i class="fas fa-tasks"></i>
+                <span>Tareas</span>
+            </div>
+            <div class="sidebar-item" data-tab="pomodoro">
+                <i class="fas fa-clock"></i>
+                <span>Pomodoro</span>
+            </div>
+        </nav>
+        <button class="sidebar-toggle" id="btn-collapse-sidebar" title="Colapsar menú">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </aside>
+
+    <!-- Contenido Principal -->
+    <main class="main-content" id="main-content">
+        <!-- Dashboard -->
+        <section id="tab-dashboard" class="tab-content active">
+            <div class="dashboard-grid">
+                <!-- Gráfico de Horas por Materia -->
+                <div class="card card-chart">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-bar"></i> Minutos Estudiados por Materia</h2>
+                        <div class="period-filter">
+                            <select id="filter-periodo" class="form-select form-select-sm">
+                                <option value="semana">Esta Semana</option>
+                                <option value="mes" selected>Este Mes</option>
+                                <option value="rango">Rango Personalizado</option>
+                            </select>
+                            <div id="rango-fechas" class="rango-fechas d-none">
+                                <input type="date" id="fecha-inicio" class="form-control form-control-sm">
+                                <span>hasta</span>
+                                <input type="date" id="fecha-fin" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chart-horas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Contenedor de listas (apiladas) -->
+                <div class="dashboard-lists">
+                    <!-- Próximas Tareas -->
+                    <div class="card card-proximas-tareas">
+                        <div class="card-header">
+                            <h2><i class="fas fa-calendar-alt"></i> Próximas Tareas</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="proximas-tareas" class="task-list">
+                                <p class="text-muted">No hay tareas pendientes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Últimas Sesiones Pomodoro -->
+                    <div class="card card-sesiones">
+                        <div class="card-header">
+                            <h2><i class="fas fa-clock"></i> Últimas Sesiones Pomodoro</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="ultimas-sesiones" class="session-list">
+                                <p class="text-muted">No hay sesiones recientes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen del Día -->
+                <div class="card card-summary">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-pie"></i> Resumen</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-stats">
+                            <div class="stat-item">
+                                <span class="stat-value" id="stat-horas-hoy">0</span>
+                                <span class="stat-label">Horas Hoy</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="stat-pomodoros-hoy">0</span>
+                                <span class="stat-label">Pomodoros Hoy</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="stat-tareas-pendientes">0</span>
+                                <span class="stat-label">Tareas Pendientes</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="stat-tareas-completadas">0</span>
+                                <span class="stat-label">Tareas Completadas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Materias -->
+        <section id="tab-materias" class="tab-content">
+            <div class="section-header">
+                <h2>Mis Materias</h2>
+                <div class="section-actions">
+                    <button class="btn btn-outline-secondary btn-sm" id="btn-vista-materias" title="Cambiar vista">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="btn btn-primary" id="btn-nueva-materia">
+                        <i class="fas fa-plus"></i> Nueva Materia
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Vista Cards -->
+            <div id="materias-grid" class="materias-grid">
+                <!-- Las materias se cargan dinámicamente -->
+            </div>
+            
+            <!-- Vista Tabla -->
+            <div id="materias-table" class="materias-table d-none">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Color</th>
+                            <th>Prioridad</th>
+                            <th>Horas</th>
+                            <th>Tareas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="materias-tbody">
+                        <!-- Las materias se cargan dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tareas -->
+        <section id="tab-tareas" class="tab-content">
+            <div class="section-header">
+                <h2>Mis Tareas</h2>
+                <div class="section-actions">
+                    <select id="filter-materia-tareas" class="form-select form-select-sm">
+                        <option value="">Todas las materias</option>
+                    </select>
+                    <select id="filter-estado-tareas" class="form-select form-select-sm">
+                        <option value="">Todos los estados</option>
+                        <option value="PENDIENTE">Pendientes</option>
+                        <option value="EN_PROGRESO">En Progreso</option>
+                        <option value="COMPLETADA">Completadas</option>
+                    </select>
+                    <button class="btn btn-primary" id="btn-nueva-tarea">
+                        <i class="fas fa-plus"></i> Nueva Tarea
+                    </button>
+                </div>
+            </div>
+            
+            <div id="tareas-por-materia" class="tareas-por-materia">
+                <!-- Las tareas agrupadas por materia se cargan dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Pomodoro -->
+        <section id="tab-pomodoro" class="tab-content">
+            <div class="pomodoro-page">
+                <!-- Columna izquierda: Timer + Stats (oculto por defecto) -->
+                <div class="pomodoro-timer-container d-none" id="pomodoro-timer-container">
+                    <div class="card card-pomodoro-timer">
+                        <div class="card-header">
+                            <h2><i class="fas fa-clock"></i> Pomodoro en curso</h2>
+                            <button class="btn btn-outline-secondary btn-sm" id="btn-cambiar-tarea">
+                                <i class="fas fa-exchange-alt"></i> Cambiar tarea
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="pomodoro-tarea-info">
+                                <span id="pomodoro-materia" class="pomodoro-materia">Seleccionar materia</span>
+                                <span id="pomodoro-tarea" class="pomodoro-tarea">Seleccionar tarea</span>
+                                <span id="pomodoro-task-time" class="pomodoro-task-time">0 min acumuladas</span>
+                            </div>
+                            
+                            <div class="pomodoro-timer">
+                                <svg class="timer-svg" viewBox="0 0 200 200">
+                                    <circle class="timer-bg" cx="100" cy="100" r="90"></circle>
+                                    <circle class="timer-progress" cx="100" cy="100" r="90" id="timer-progress"></circle>
+                                </svg>
+                                <div class="timer-display">
+                                    <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+                                </div>
+                                <div id="timer-status" class="timer-status">TRABAJO</div>
+                            </div>
+
+                            <div class="pomodoro-controls">
+                                <button class="btn btn-pomodoro-control" id="btn-pomodoro-iniciar" title="Iniciar">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="btn btn-pomodoro-control d-none" id="btn-pomodoro-pausar" title="Pausar">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                                <button class="btn btn-pomodoro-control d-none" id="btn-pomodoro-reanudar" title="Reanudar">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="btn btn-pomodoro-control btn-danger" id="btn-pomodoro-finalizar" title="Finalizar">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas del Pomodoro -->
+                    <div class="card card-pomodoro-stats">
+                        <div class="card-body">
+                            <div class="pomodoro-info">
+                                <div class="pomodoro-stat">
+                                    <span class="pomodoro-stat-label">Pomodoros hoy</span>
+                                    <span class="pomodoro-stat-value" id="pomodoro-count-hoy">0</span>
+                                </div>
+                                <div class="pomodoro-stat">
+                                    <span class="pomodoro-stat-label">Tiempo total hoy</span>
+                                    <span class="pomodoro-stat-value" id="pomodoro-tiempo-hoy">0 min</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna derecha: Selección de tarea + Historial + Config -->
+                <div class="pomodoro-sidebar-container" id="pomodoro-seleccion-container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-clock"></i> Seleccionar tarea para estudiar</h2>
+                            <button class="btn btn-primary btn-sm" id="btn-nueva-tarea-rapida">
+                                <i class="fas fa-plus"></i> Nueva tarea rápida
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="pomodoro-task-list" class="pomodoro-task-list">
+                                <!-- Las tareas se cargan dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Últimas sesiones -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-history"></i> Últimas sesiones de hoy</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="pomodoro-historial" class="pomodoro-historial">
+                                <p class="text-muted">No hay sesiones hoy</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración del Pomodoro -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-cog"></i> Configuración del Pomodoro</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="pomodoro-config-form">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tiempo de trabajo (min)</label>
+                                        <input type="number" class="form-control" id="config-trabajo" min="1" max="120" value="25">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Descanso corto (min)</label>
+                                        <input type="number" class="form-control" id="config-descanso" min="1" max="60" value="5">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Descanso largo (min)</label>
+                                        <input type="number" class="form-control" id="config-descanso-largo" min="1" max="60" value="15">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Pomodoros para descanso largo</label>
+                                        <input type="number" class="form-control" id="config-pomodoros-largo" min="1" max="12" value="4">
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                                    <button type="submit" class="btn btn-primary">Guardar configuración</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Crear/Editar Materia -->
+    <div class="modal fade" id="modal-materia" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modal-materia-title">Nueva Materia</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="form-materia">
+                    <div class="modal-body">
+                        <input type="hidden" id="materia-id">
+                        <div class="mb-3">
+                            <label for="materia-nombre" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="materia-nombre" required maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label for="materia-codigo" class="form-label">Código *</label>
+                            <input type="text" class="form-control" id="materia-codigo" required maxlength="10" placeholder="Ej: MAT101">
+                            <small class="text-muted">3-10 caracteres alfanuméricos en mayúsculas</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="materia-color" class="form-label">Color *</label>
+                            <div class="color-picker">
+                                <input type="color" class="form-control form-control-color" id="materia-color" value="#7C3AED">
+                                <span class="color-hex" id="materia-color-hex">#7C3AED</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="materia-prioridad" class="form-label">Prioridad *</label>
+                            <select class="form-select" id="materia-prioridad" required>
+                                <option value="ALTA">Alta</option>
+                                <option value="MEDIA" selected>Media</option>
+                                <option value="BAJA">Baja</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Crear/Editar Tarea -->
+    <div class="modal fade" id="modal-tarea" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modal-tarea-title">Nueva Tarea</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="form-tarea">
+                    <div class="modal-body">
+                        <input type="hidden" id="tarea-id">
+                        <div class="mb-3">
+                            <label for="tarea-titulo" class="form-label">Título *</label>
+                            <input type="text" class="form-control" id="tarea-titulo" required maxlength="200">
+                        </div>
+                        <div class="mb-3">
+                            <label for="tarea-descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="tarea-descripcion" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tarea-materia" class="form-label">Materia *</label>
+                            <select class="form-select" id="tarea-materia" required>
+                                <!-- Las materias se cargan dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tarea-fecha-limite" class="form-label">Fecha Límite *</label>
+                            <input type="date" class="form-control" id="tarea-fecha-limite" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tarea-prioridad" class="form-label">Prioridad *</label>
+                            <select class="form-select" id="tarea-prioridad" required>
+                                <option value="ALTA">Alta</option>
+                                <option value="MEDIA" selected>Media</option>
+                                <option value="BAJA">Baja</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmar Eliminación -->
+    <div class="modal fade" id="modal-confirmar" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Confirmar</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="modal-confirmar-mensaje">¿Estás seguro de que querés eliminar esto?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-eliminar">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast para notificaciones -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast-notificacion" class="toast" role="alert">
+            <div class="toast-header">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong class="me-auto" id="toast-titulo">Notificación</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-mensaje">
+                Mensaje de notificación
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/api-local.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/notificaciones.js"></script>
+    <script src="js/materias.js"></script>
+    <script src="js/tareas.js"></script>
+    <script src="js/pomodoro.js"></script>
+    <script src="js/estadisticas.js"></script>
+    <script src="js/update.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
