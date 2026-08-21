@@ -168,6 +168,11 @@ public final class NativeNotification {
                 autoCloseTransition.play();
 
                 log.debug("Notificación nativa mostrada para tarea: {}", taskName);
+            } else {
+                // Ya hay otra notificación activa: cerrar la stage recién creada
+                // para no dejar stages huérfanas (fuga de recursos)
+                safeClose(stage);
+                log.debug("Notificación descartada: ya existe una notificación activa");
             }
         } catch (final Exception e) {
             log.error("Error al crear notificación nativa para tarea: {}", taskName, e);

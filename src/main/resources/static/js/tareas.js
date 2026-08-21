@@ -135,7 +135,7 @@ class Tareas {
             <div class="materia-tasks-section" data-materia-id="${materia.id}">
                 <div class="materia-tasks-header">
                     <div class="materia-tasks-color" style="background-color: ${materia.color}"></div>
-                    <h3 class="materia-tasks-title">${materia.nombre}</h3>
+                    <h3 class="materia-tasks-title">${Utils.escapeHtml(materia.nombre)}</h3>
                     <span class="materia-tasks-count">${tareas.length} tareas</span>
                 </div>
                 <div class="materia-tasks-board">
@@ -184,16 +184,19 @@ class Tareas {
         const diasRestantes = Utils.diasRestantes(tarea.fechaLimite);
         const claseUrgencia = Utils.obtenerClaseUrgencia(tarea.fechaLimite);
         const textoDias = Utils.textoDiasRestantes(tarea.fechaLimite);
-        const clasePrioridad = tarea.prioridad.toLowerCase();
+        const clasePrioridad = String(tarea.prioridad || '').toLowerCase();
+        const titulo = Utils.escapeHtml(tarea.titulo);
+        const prioridad = Utils.escapeHtml(tarea.prioridad);
+        const descripcion = Utils.escapeHtml(this.truncarTexto(tarea.descripcion, 50));
 
         return `
             <div class="task-card" data-id="${tarea.id}" draggable="true">
-                <div class="task-card-title">${tarea.titulo}</div>
+                <div class="task-card-title">${titulo}</div>
                 <div class="task-card-meta">
-                    <span class="task-card-priority ${clasePrioridad}">${tarea.prioridad}</span>
+                    <span class="task-card-priority ${clasePrioridad}">${prioridad}</span>
                     <span class="task-due ${claseUrgencia}">${textoDias}</span>
                 </div>
-                ${tarea.descripcion ? `<div class="task-card-description text-muted">${this.truncarTexto(tarea.descripcion, 50)}</div>` : ''}
+                ${tarea.descripcion ? `<div class="task-card-description text-muted">${descripcion}</div>` : ''}
                 <div class="task-card-actions">
                     <button class="btn btn-sm btn-outline-secondary" onclick="tareas.abrirModalEditar('${tarea.id}')" title="Editar">
                         <i class="fas fa-edit"></i>

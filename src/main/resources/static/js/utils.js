@@ -5,6 +5,21 @@
 
 class Utils {
     /**
+     * Escapa caracteres HTML para prevenir XSS al interpolar datos de usuario.
+     * @param {string} texto - Texto a escapar
+     * @returns {string} Texto seguro para inserción en HTML
+     */
+    static escapeHtml(texto) {
+        if (texto === null || texto === undefined) return '';
+        return String(texto)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /**
      * Formatea una fecha a string legible
      * @param {string|Date} fecha - Fecha a formatear
      * @returns {string} Fecha formateada
@@ -254,11 +269,11 @@ class Utils {
         const hoy = new Date();
         const diaSemana = hoy.getDay();
         const diff = hoy.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
-        
+
         const inicio = new Date(hoy);
         inicio.setDate(diff);
-        
-        return inicio.toISOString().split('T')[0];
+
+        return this.formatearFechaISO(inicio);
     }
 
     /**
@@ -267,15 +282,28 @@ class Utils {
      */
     static inicioMes() {
         const hoy = new Date();
-        return new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+        return this.formatearFechaISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
     }
 
     /**
-     * Obtiene la fecha actual en formato YYYY-MM-DD
+     * Obtiene la fecha actual en formato YYYY-MM-DD (hora local)
      * @returns {string} Fecha formateada
      */
     static hoy() {
-        return new Date().toISOString().split('T')[0];
+        return this.formatearFechaISO(new Date());
+    }
+
+    /**
+     * Formatea una fecha a YYYY-MM-DD usando componentes locales
+     * (evita el desfase de zona horaria de toISOString).
+     * @param {Date} date - Fecha a formatear
+     * @returns {string} Fecha en formato YYYY-MM-DD
+     */
+    static formatearFechaISO(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
     /**
@@ -284,7 +312,7 @@ class Utils {
      */
     static finMes() {
         const hoy = new Date();
-        return new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).toISOString().split('T')[0];
+        return this.formatearFechaISO(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0));
     }
 }
 

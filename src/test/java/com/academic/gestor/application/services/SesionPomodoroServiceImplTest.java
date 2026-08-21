@@ -8,6 +8,7 @@ import com.academic.gestor.domain.model.enums.TipoSesion;
 import com.academic.gestor.domain.model.valueobjects.DuracionMinutos;
 import com.academic.gestor.domain.ports.outbound.ConfiguracionPomodoroRepository;
 import com.academic.gestor.domain.ports.outbound.SesionPomodoroRepository;
+import com.academic.gestor.domain.ports.outbound.TareaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,6 +37,9 @@ class SesionPomodoroServiceImplTest {
     @Mock
     private ConfiguracionPomodoroRepository configuracionRepositoryMock;
 
+    @Mock
+    private TareaRepository tareaRepositoryMock;
+
     @InjectMocks
     private SesionPomodoroServiceImpl sut;
 
@@ -61,6 +65,8 @@ class SesionPomodoroServiceImplTest {
         @DisplayName("deberia iniciar sesion con duracion valida")
         void deberiaIniciarSesionConDuracionValida() {
             // Arrange
+            when(tareaRepositoryMock.existsById(tareaId)).thenReturn(true);
+            when(sesionRepositoryMock.findByTareaId(tareaId)).thenReturn(List.of());
             when(sesionRepositoryMock.save(any(SesionPomodoro.class))).thenReturn(sesionEjemplo);
 
             // Act
@@ -72,6 +78,33 @@ class SesionPomodoroServiceImplTest {
             assertEquals(materiaId, resultado.getMateriaId());
             assertFalse(resultado.isCompletada());
             verify(sesionRepositoryMock).save(any(SesionPomodoro.class));
+        }
+
+        @Test
+        @DisplayName("deberia lanzar TareaNotFoundException cuando la tarea no existe")
+        void deberiaLanzarExcepcionCuandoTareaNoExiste() {
+            // Arrange
+            when(tareaRepositoryMock.existsById(tareaId)).thenReturn(false);
+
+            // Act & Then
+            assertThrows(com.academic.gestor.domain.exceptions.TareaNotFoundException.class,
+                    () -> sut.iniciarSesion(tareaId, materiaId, 25));
+            verify(sesionRepositoryMock, never()).save(any(SesionPomodoro.class));
+        }
+
+        @Test
+        @DisplayName("deberia lanzar SesionPomodoroException cuando ya hay sesion en curso")
+        void deberiaLanzarExcepcionCuandoHaySesionEnCurso() {
+            // Arrange
+            when(tareaRepositoryMock.existsById(tareaId)).thenReturn(true);
+            when(sesionRepositoryMock.findByTareaId(tareaId))
+                    .thenReturn(List.of(SesionPomodoro.iniciar(
+                            tareaId, materiaId, DuracionMinutos.of(25), TipoSesion.TRABAJO)));
+
+            // Act & Then
+            assertThrows(SesionPomodoroException.class,
+                    () -> sut.iniciarSesion(tareaId, materiaId, 25));
+            verify(sesionRepositoryMock, never()).save(any(SesionPomodoro.class));
         }
 
         @Test

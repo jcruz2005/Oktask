@@ -24,7 +24,19 @@ public final class UuidUtils {
     }
 
     /**
-     * Valida si una cadena es un UUID válido.
+     * Patrón estricto de UUID canónico (8-4-4-4-12, solo hexadecimal).
+     */
+    private static final java.util.regex.Pattern UUID_PATTERN =
+            java.util.regex.Pattern.compile(
+                    "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            );
+
+    /**
+     * Valida si una cadena es un UUID canónico válido.
+     *
+     * <p>{@link UUID#fromString(String)} acepta formatos laxos
+     * (p.ej. {@code 1-1-1-1-1}); este método exige el formato
+     * canónico 8-4-4-4-12 con caracteres hexadecimales.</p>
      *
      * @param value cadena a validar
      * @return true si es un UUID válido, false de lo contrario
@@ -33,12 +45,7 @@ public final class UuidUtils {
         if (value == null || value.isBlank()) {
             return false;
         }
-        try {
-            UUID.fromString(value);
-            return true;
-        } catch (final IllegalArgumentException e) {
-            return false;
-        }
+        return UUID_PATTERN.matcher(value.trim()).matches();
     }
 
     /**

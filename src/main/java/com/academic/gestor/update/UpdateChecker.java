@@ -49,6 +49,9 @@ public class UpdateChecker {
     /** Versión actual de la aplicación. */
     private final String currentVersion;
 
+    /** Fuente remota de version.json (sobreescribible para tests). */
+    private final String versionUrl;
+
     /** Última verificación realizada. */
     private final AtomicReference<Instant> lastCheck = new AtomicReference<>(Instant.MIN);
 
@@ -88,7 +91,18 @@ public class UpdateChecker {
      * @param currentVersion versión actual de la aplicación
      */
     public UpdateChecker(String currentVersion) {
+        this(currentVersion, VERSION_URL);
+    }
+
+    /**
+     * Constructor con URL de version.json personalizada.
+     *
+     * @param currentVersion versión actual de la aplicación
+     * @param versionUrl URL del archivo version.json remoto
+     */
+    public UpdateChecker(String currentVersion, String versionUrl) {
         this.currentVersion = currentVersion;
+        this.versionUrl = versionUrl;
     }
 
     /**
@@ -172,7 +186,7 @@ public class UpdateChecker {
     private UpdateInfo fetchRemoteVersion() throws Exception {
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(VERSION_URL);
+            URL url = new URL(versionUrl);
             connection = (HttpURLConnection) url.openConnection();
             connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
             connection.setReadTimeout(READ_TIMEOUT_MS);

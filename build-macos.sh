@@ -9,7 +9,7 @@ set -e
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$PROJECT_DIR/target"
 JAVAFX_VERSION="21.0.1"
-APP_VERSION="1.1.0"
+APP_VERSION="1.2.0"
 
 echo "=========================================="
 echo "  BUILD NATIVO PARA macOS"

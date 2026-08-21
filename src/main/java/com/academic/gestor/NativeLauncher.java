@@ -255,6 +255,7 @@ public class NativeLauncher extends Application {
         primaryStage.setTitle(APP_TITLE);
         primaryStage.setMinWidth(MIN_WIDTH);
         primaryStage.setMinHeight(MIN_HEIGHT);
+        primaryStage.setMaximized(true);
         primaryStage.getIcons().addAll(loadAppIcons());
         primaryStage.setOnCloseRequest(e -> {
             if (webEngine != null && webEngine.getLoadWorker() != null) {
@@ -291,6 +292,26 @@ public class NativeLauncher extends Application {
             try { Thread.sleep(SERVER_POLL_INTERVAL_MS); }
             catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
         }
+
+        // El servidor no respondió a tiempo: avisar al usuario en lugar de colgarse
+        System.err.println("[OKtask] El servidor no respondió dentro de " +
+            (MAX_SERVER_ATTEMPTS * SERVER_POLL_INTERVAL_MS / 1000) + "s");
+        Platform.runLater(() -> {
+            try {
+                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                    javafx.scene.control.Alert.AlertType.ERROR
+                );
+                alert.setTitle("Error de inicio");
+                alert.setHeaderText("No se pudo iniciar el servidor local");
+                alert.setContentText("El servidor de OKtask no respondió a tiempo. " +
+                    "Revisá que el puerto " + SERVER_PORT + " esté libre e intentá de nuevo.");
+                alert.showAndWait();
+                Platform.exit();
+                System.exit(1);
+            } catch (Exception e) {
+                System.exit(1);
+            }
+        });
     }
 
     private static boolean checkServer() {

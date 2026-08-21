@@ -13,6 +13,10 @@ import java.util.List;
 /**
  * Exportador de datos a formato CSV.
  *
+ * <p>Escapa correctamente los campos (RFC 4180) y previene la
+ * inyección de fórmulas (CSV injection) al neutralizar campos que
+ * comienzan con caracteres peligrosos ({@code =}, {@code +}, {@code -}, {@code @}).</p>
+ *
  * @author Gestor de Tareas Académicas
  * @since 1.0.0
  */
@@ -20,6 +24,34 @@ import java.util.List;
 public class CsvExporter {
 
     private static final Logger log = LoggerFactory.getLogger(CsvExporter.class);
+
+    /**
+     * Escapa un campo CSV: envuelve en comillas si contiene separadores,
+     * comillas o saltos de línea, y neutraliza fórmulas maliciosas.
+     *
+     * @param value valor a escapar
+     * @return valor seguro para CSV
+     */
+    private String escapeField(final String value) {
+        if (value == null) {
+            return "";
+        }
+
+        String field = value;
+        // Neutralizar CSV injection
+        if (!field.isEmpty()) {
+            final char first = field.charAt(0);
+            if (first == '=' || first == '+' || first == '-' || first == '@') {
+                field = "'" + field;
+            }
+        }
+
+        if (field.contains(",") || field.contains("\"") || field.contains("\n")
+                || field.contains("\r")) {
+            field = "\"" + field.replace("\"", "\"\"") + "\"";
+        }
+        return field;
+    }
 
     /**
      * Exporta una lista de estadísticas a un archivo CSV.
@@ -38,15 +70,7 @@ public class CsvExporter {
 
             // Datos
             for (final EstadisticaMateriaDTO est : estadísticas) {
-                writer.printf("%s,%s,%.2f,%d,%d,%d,%.1f%%%n",
-                        est.nombreMateria(),
-                        est.codigoMateria(),
-                        est.horasEstudiadas(),
-                        est.pomodorosCompletados(),
-                        est.tareasTotales(),
-                        est.tareasCompletadas(),
-                        est.porcentajeProgreso()
-                );
+                writer.println(toCsvRow(est));
             }
         }
 
@@ -67,17 +91,27 @@ public class CsvExporter {
 
         // Datos
         for (final EstadisticaMateriaDTO est : estadísticas) {
-            sb.append(String.format("%s,%s,%.2f,%d,%d,%d,%.1f%%%n",
-                    est.nombreMateria(),
-                    est.codigoMateria(),
-                    est.horasEstudiadas(),
-                    est.pomodorosCompletados(),
-                    est.tareasTotales(),
-                    est.tareasCompletadas(),
-                    est.porcentajeProgreso()
-            ));
+            sb.append(toCsvRow(est)).append('\n');
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Construye una fila CSV a partir de un DTO de estadísticas.
+     *
+     * @param est DTO de estadísticas
+     * @return fila CSV formateada
+     */
+    private String toCsvRow(final EstadisticaMateriaDTO est) {
+        return String.format("%s,%s,%.2f,%d,%d,%d,%.1f%%",
+                escapeField(est.nombreMateria()),
+                escapeField(est.codigoMateria()),
+                est.horasEstudiadas(),
+                est.pomodorosCompletados(),
+                est.tareasTotales(),
+                est.tareasCompletadas(),
+                est.porcentajeProgreso()
+        );
     }
 }

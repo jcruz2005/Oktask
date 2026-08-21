@@ -238,6 +238,23 @@ class TareaTest {
         }
 
         @Test
+        @DisplayName("deberia limpiar fechaCompletado al reabrir una tarea completada")
+        void deberiaLimpiarFechaCompletadoAlReabrir() {
+            // Arrange
+            Tarea tarea = Tarea.create(TITULO_DEFAULT, DESCRIPCION_DEFAULT,
+                    MATERIA_ID, FECHA_LIMITE_DEFAULT, PRIORIDAD_DEFAULT);
+            tarea.cambiarEstado(EstadoTarea.COMPLETADA);
+            assertNotNull(tarea.getFechaCompletado());
+
+            // Act
+            tarea.cambiarEstado(EstadoTarea.PENDIENTE);
+
+            // Assert
+            assertEquals(EstadoTarea.PENDIENTE, tarea.getEstado());
+            assertNull(tarea.getFechaCompletado());
+        }
+
+        @Test
         @DisplayName("deberia lanzar NullPointerException cuando estado es nulo")
         void deberiaLanzarExcepcionCuandoEstadoEsNulo() {
             // Arrange

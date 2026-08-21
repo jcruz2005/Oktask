@@ -8,7 +8,7 @@ setlocal enabledelayedexpansion
 
 set "PROJECT_DIR=%~dp0"
 set "TARGET_DIR=%PROJECT_DIR%target"
-set "APP_VERSION=1.1.0"
+set "APP_VERSION=1.2.0"
 
 echo ==========================================
 echo   BUILD NATIVO PARA WINDOWS

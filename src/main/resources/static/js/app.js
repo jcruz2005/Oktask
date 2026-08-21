@@ -270,6 +270,18 @@ class App {
             }
         });
     }
+
+    /**
+     * Verifica si el elemento es un campo de texto editable
+     * @param {Element} elemento - Elemento del evento
+     * @returns {boolean} true si es un input, textarea o select
+     */
+    esCampoTexto(elemento) {
+        if (!elemento) return false;
+        const tag = elemento.tagName?.toLowerCase();
+        return tag === 'input' || tag === 'textarea' || tag === 'select'
+            || elemento.isContentEditable;
+    }
 }
 
 // Iniciar aplicación cuando el DOM esté listo

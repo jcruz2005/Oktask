@@ -23,7 +23,6 @@ spring:
     serialization:
       write-dates-as-timestamps: false
     date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: America/Argentina/Buenos_Aires
 
 # Configuración por defecto del Pomodoro
 pomodoro:

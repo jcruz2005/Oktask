@@ -146,6 +146,9 @@ public class Tarea extends AggregateRoot<Tarea> {
                     this.materiaId,
                     this.fechaCompletado
             ));
+        } else {
+            // Al reabrir una tarea completada, se limpia la fecha de completado
+            this.fechaCompletado = null;
         }
     }
 

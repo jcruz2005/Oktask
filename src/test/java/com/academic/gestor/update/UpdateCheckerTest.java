@@ -1,21 +1,65 @@
 package com.academic.gestor.update;
 
+import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests unitarios para UpdateChecker.
+ * Tests unitarios para UpdateChecker usando un servidor HTTP local,
+ * sin dependencia de la red ni de GitHub.
  */
 @DisplayName("UpdateChecker")
 class UpdateCheckerTest {
+
+    private static final String VERSION_JSON = """
+            {
+              "version": "2.0.0",
+              "releaseDate": "2026-08-18",
+              "changelog": ["Cambio de prueba"],
+              "minVersion": "1.0.0",
+              "downloads": {
+                "linux": {"url": "https://example.com/oktask.tar.gz", "filename": "oktask.tar.gz"},
+                "windows": {"url": "https://example.com/oktask.msi", "filename": "oktask.msi"},
+                "macos": {"url": "https://example.com/oktask.dmg", "filename": "oktask.dmg"}
+              }
+            }
+            """;
+
+    private HttpServer server;
+    private String baseUrl;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/version.json", exchange -> {
+            byte[] body = VERSION_JSON.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+        });
+        server.start();
+        baseUrl = "http://localhost:" + server.getAddress().getPort() + "/version.json";
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (server != null) {
+            server.stop(0);
+        }
+    }
 
     @Nested
     @DisplayName("Constructor")
@@ -41,102 +85,127 @@ class UpdateCheckerTest {
     class CheckForUpdate {
 
         @Test
-        @Timeout(15)
-        @DisplayName("Verificación contra GitHub retorna resultado")
-        void checkAgainstGitHubReturnsResult() throws Exception {
-            UpdateChecker checker = new UpdateChecker("1.0.0");
+        @DisplayName("Detecta actualización cuando la versión remota es mayor")
+        void detectsUpdateWhenRemoteIsNewer() throws Exception {
+            // Arrange
+            UpdateChecker checker = new UpdateChecker("1.0.0", baseUrl);
             AtomicReference<UpdateInfo> result = new AtomicReference<>();
-            CountDownLatch latch = new CountDownLatch(1);
 
             checker.setListener(new UpdateChecker.UpdateListener() {
                 @Override
                 public void onUpdateAvailable(UpdateInfo info) {
                     result.set(info);
-                    latch.countDown();
                 }
 
                 @Override
                 public void onNoUpdateAvailable() {
-                    latch.countDown();
                 }
 
                 @Override
                 public void onError(String error) {
-                    latch.countDown();
                 }
             });
 
-            // Ejecutar en hilo separado para no bloquear
-            new Thread(() -> {
-                checker.checkForUpdate(true);
-            }).start();
+            // Act
+            UpdateInfo info = checker.checkForUpdate(true);
 
-            latch.await(10, TimeUnit.SECONDS);
-
-            // La versión en el repo es 1.1.0, si nuestra versión es 1.0.0 debería haber update
-            // Nota: Esto depende de que el archivo version.json exista en el repo
-            // Si no hay conexión, el test igual debe pasar (manejo de errores)
+            // Assert
+            assertNotNull(info);
+            assertEquals("2.0.0", info.getVersion());
+            assertEquals("2.0.0", result.get().getVersion());
         }
 
         @Test
-        @Timeout(15)
-        @DisplayName("Versión igual no muestra actualización")
-        void sameVersionShowsNoUpdate() throws Exception {
-            // Usar una versión que sabemos que es la última
-            UpdateChecker checker = new UpdateChecker("99.99.99");
+        @DisplayName("No muestra actualización cuando la versión actual es mayor o igual")
+        void noUpdateWhenCurrentIsNewer() throws Exception {
+            // Arrange
+            UpdateChecker checker = new UpdateChecker("99.99.99", baseUrl);
             AtomicReference<String> action = new AtomicReference<>();
-            CountDownLatch latch = new CountDownLatch(1);
 
             checker.setListener(new UpdateChecker.UpdateListener() {
                 @Override
                 public void onUpdateAvailable(UpdateInfo info) {
                     action.set("available");
-                    latch.countDown();
                 }
 
                 @Override
                 public void onNoUpdateAvailable() {
                     action.set("no_update");
-                    latch.countDown();
                 }
 
                 @Override
                 public void onError(String error) {
                     action.set("error");
-                    latch.countDown();
                 }
             });
 
-            new Thread(() -> checker.checkForUpdate(true)).start();
-            latch.await(10, TimeUnit.SECONDS);
+            // Act
+            UpdateInfo result = checker.checkForUpdate(true);
 
-            // Con versión 99.99.99, no debería haber actualización
-            // (a menos que el repo tenga una versión mayor, lo cual es improbable)
+            // Assert
+            assertNull(result, "No debe retornar actualización");
+            assertEquals("no_update", action.get());
         }
 
         @Test
-        @DisplayName("Caching funciona correctamente")
-        void cachingWorks() {
-            UpdateChecker checker = new UpdateChecker("1.1.0");
+        @DisplayName("El caching devuelve el mismo resultado sin nueva petición")
+        void cachingWorks() throws Exception {
+            // Arrange
+            UpdateChecker checker = new UpdateChecker("1.0.0", baseUrl);
 
-            // Primera verificación (puede fallar por conexión)
-            checker.checkForUpdate(true);
-
-            // Segunda verificación debería usar caché
+            // Act
+            UpdateInfo first = checker.checkForUpdate(true);
             UpdateInfo cached = checker.checkForUpdate(false);
-            // El resultado debería ser el mismo que la primera vez
+
+            // Assert
+            assertNotNull(first);
+            assertSame(first, cached, "La segunda verificación debe usar el cache");
         }
 
         @Test
-        @DisplayName("Force check ignora caché")
-        void forceCheckIgnoresCache() {
-            UpdateChecker checker = new UpdateChecker("1.1.0");
+        @DisplayName("Force check ignora caché y hace una nueva petición")
+        void forceCheckIgnoresCache() throws Exception {
+            // Arrange
+            UpdateChecker checker = new UpdateChecker("1.0.0", baseUrl);
 
-            // Primera verificación
+            // Act
             checker.checkForUpdate(true);
+            UpdateInfo forced = checker.checkForUpdate(true);
 
-            // Force check debería hacer una nueva petición
-            checker.checkForUpdate(true);
+            // Assert
+            assertNotNull(forced);
+            assertEquals("2.0.0", forced.getVersion());
+        }
+
+        @Test
+        @DisplayName("Error de conexión retorna null y notifica error")
+        void connectionErrorReturnsNull() {
+            // Arrange
+            UpdateChecker checker = new UpdateChecker("1.0.0",
+                    "http://localhost:1/no-existe.json");
+            AtomicReference<String> error = new AtomicReference<>();
+
+            checker.setListener(new UpdateChecker.UpdateListener() {
+                @Override
+                public void onUpdateAvailable(UpdateInfo info) {
+                }
+
+                @Override
+                public void onNoUpdateAvailable() {
+                }
+
+                @Override
+                public void onError(String err) {
+                    error.set(err);
+                }
+            });
+
+            // Act
+            UpdateInfo result = checker.checkForUpdate(true);
+
+            // Assert
+            assertNull(result);
+            assertNotNull(error.get());
         }
     }
 
@@ -147,46 +216,10 @@ class UpdateCheckerTest {
         @Test
         @DisplayName("Clear cache resetea el estado")
         void clearCacheResetsState() {
-            UpdateChecker checker = new UpdateChecker("1.1.0");
+            UpdateChecker checker = new UpdateChecker("1.1.0", baseUrl);
             checker.clearCache();
 
             assertNull(checker.getLastCheckResult());
-        }
-    }
-
-    @Nested
-    @DisplayName("Manejo de errores")
-    class ErrorHandling {
-
-        @Test
-        @DisplayName("URL inválida no causa excepción")
-        void invalidUrlDoesNotThrow() {
-            UpdateChecker checker = new UpdateChecker("1.1.0");
-            AtomicReference<String> error = new AtomicReference<>();
-            CountDownLatch latch = new CountDownLatch(1);
-
-            checker.setListener(new UpdateChecker.UpdateListener() {
-                @Override
-                public void onUpdateAvailable(UpdateInfo info) {
-                    latch.countDown();
-                }
-
-                @Override
-                public void onNoUpdateAvailable() {
-                    latch.countDown();
-                }
-
-                @Override
-                public void onError(String err) {
-                    error.set(err);
-                    latch.countDown();
-                }
-            });
-
-            // Esto debería manejar el error gracefully
-            assertDoesNotThrow(() -> {
-                new Thread(() -> checker.checkForUpdate(true)).start();
-            });
         }
     }
 }
