@@ -412,6 +412,40 @@ class UpdateChecker {
     }
 
     /**
+     * Muestra barra de progreso de descarga
+     */
+    showDownloadProgress(message) {
+        this.downloadOverlay = document.createElement('div');
+        this.downloadOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center;
+            justify-content: center; z-index: 10001;
+        `;
+        this.downloadOverlay.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 32px 40px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <div style="font-size: 24px; margin-bottom: 16px;">⏳</div>
+                <div style="font-size: 16px; font-weight: 600; color: #1F2937; margin-bottom: 8px;">${message}</div>
+                <div style="font-size: 13px; color: #6B7280;">Esto puede tardar unos minutos...</div>
+                <div style="margin-top: 16px; width: 200px; height: 4px; background: #E5E7EB; border-radius: 2px; overflow: hidden; margin: 16px auto 0;">
+                    <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #7C3AED, #6D28D9); animation: progress 2s ease-in-out infinite;"></div>
+                </div>
+            </div>
+            <style>@keyframes progress { 0%{transform:translateX(-100%)} 50%{transform:translateX(0%)} 100%{transform:translateX(100%)} }</style>
+        `;
+        document.body.appendChild(this.downloadOverlay);
+    }
+
+    /**
+     * Oculta barra de progreso de descarga
+     */
+    hideDownloadProgress() {
+        if (this.downloadOverlay) {
+            this.downloadOverlay.remove();
+            this.downloadOverlay = null;
+        }
+    }
+
+    /**
      * Abre la URL de descarga en el navegador del sistema
      */
     openDownload() {
