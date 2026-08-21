@@ -35,7 +35,7 @@ public class UpdateController {
     private static final Logger log = LoggerFactory.getLogger(UpdateController.class);
 
     /** Versión actual de la aplicación (debe coincidir con NativeLauncher). */
-    private static final String APP_VERSION = "1.2.8";
+    private static final String APP_VERSION = "1.2.10";
 
     private final UpdateChecker updateChecker;
 
