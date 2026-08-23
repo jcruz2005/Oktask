@@ -9,6 +9,7 @@ set -e
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$PROJECT_DIR/target"
 JAVAFX_VERSION="21.0.1"
+APP_VERSION="1.2.11"
 
 echo "=========================================="
 echo "  BUILD NATIVO PARA LINUX"
@@ -28,15 +29,6 @@ echo "[BUILD] Compilando..."
 cd "$PROJECT_DIR"
 mvn clean package -DskipTests -q
 echo "[OK] JAR compilado"
-
-# Detect JAR version from the built artifact
-BUILT_JAR=$(ls "$TARGET_DIR"/oktask-*.jar 2>/dev/null | grep -v original | head -1)
-if [ -z "$BUILT_JAR" ]; then
-    echo "[ERROR] No se encontró JAR compilado en $TARGET_DIR"
-    exit 1
-fi
-APP_VERSION=$(basename "$BUILT_JAR" .jar | sed 's/oktask-//')
-echo "[OK] JAR: oktask-$APP_VERSION.jar"
 
 # Crear JAR plano preservando metadata de Spring Boot
 echo ""

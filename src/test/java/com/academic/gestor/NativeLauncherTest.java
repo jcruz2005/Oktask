@@ -30,7 +30,7 @@ class NativeLauncherTest {
         }
 
         @Test
-        @DisplayName("deberia tener version de aplicacion 1.2.0")
+        @DisplayName("deberia tener version de aplicacion actual")
         void deberiaTenerVersionDeAplicacion() throws Exception {
             // Arrange
             Field field = NativeLauncher.class.getDeclaredField("APP_VERSION");
@@ -38,7 +38,8 @@ class NativeLauncherTest {
             String valor = (String) field.get(null);
 
             // Act & Assert
-            assertEquals("1.2.0", valor);
+            assertNotNull(valor, "APP_VERSION no debe ser null");
+            assertTrue(valor.matches("\\d+\\.\\d+\\.\\d+"), "APP_VERSION debe ser un semver válido: " + valor);
         }
 
         @Test

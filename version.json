@@ -11,7 +11,7 @@
     "linux": {
       "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.11/OKtask-1.2.11-linux-x64.tar.gz",
       "filename": "OKtask-1.2.11-linux-x64.tar.gz",
-      "installCommand": "tar -xzf OKtask-1.2.5-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
+      "installCommand": "tar -xzf OKtask-1.2.11-linux-x64.tar.gz && sudo cp -r OKtask /opt/ && sudo ln -sf /opt/OKtask/bin/OKtask /usr/bin/oktask"
     },
     "windows": {
       "url": "https://github.com/jcruz2005/Oktask/releases/download/v1.2.11/OKtask-1.2.11-windows-x64.zip",
