@@ -1,11 +1,14 @@
 package com.academic.gestor.infrastructure.web.controllers;
 
+import com.academic.gestor.update.RestartService;
 import com.academic.gestor.update.UpdateChecker;
 import com.academic.gestor.update.UpdateInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,6 +41,7 @@ public class UpdateController {
     private static final String APP_VERSION = "1.2.11";
 
     private final UpdateChecker updateChecker;
+    private RestartService restartService;
 
     /**
      * Constructor.
@@ -212,6 +216,57 @@ public class UpdateController {
             log.error("Error durante la instalación: {}", e.getMessage(), e);
             response.put("success", false);
             response.put("error", "Error durante la instalación: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    // ==================== ENDPOINTS DE REINICIO ====================
+
+    /**
+     * Inicia el proceso de reinicio después de una instalación exitosa.
+     * Lanza el conteo regresivo de 5 segundos y luego reinicia la app.
+     *
+     * @param request datos del reinicio (installPath, platform)
+     * @return ResponseEntity con el resultado
+     */
+    @PostMapping("/restart")
+    public ResponseEntity<Map<String, Object>> restart(
+            @RequestBody Map<String, String> request) {
+
+        Map<String, Object> response = new HashMap<>();
+        String installPath = request.getOrDefault("installPath", "");
+        String platform = request.getOrDefault("platform", "");
+
+        log.info("Reinicio solicitado: installPath={}, platform={}", installPath, platform);
+
+        if (installPath.isEmpty()) {
+            response.put("success", false);
+            response.put("error", "installPath es requerido");
+            return ResponseEntity.ok(response);
+        }
+
+        // No reiniciar en Android
+        if (platform.equals("android")) {
+            response.put("success", false);
+            response.put("error", "El reinicio automático no está disponible en Android");
+            return ResponseEntity.ok(response);
+        }
+
+        try {
+            restartService = new RestartService(installPath, platform);
+            restartService.executeRestart(() -> {
+                log.info("Reinicio ejecutado exitosamente");
+            });
+
+            response.put("success", true);
+            response.put("delaySeconds", restartService.getDelaySeconds());
+            response.put("message", "Reiniciando en " + restartService.getDelaySeconds() + " segundos...");
+
+        } catch (Exception e) {
+            log.error("Error al iniciar reinicio: {}", e.getMessage(), e);
+            response.put("success", false);
+            response.put("error", "Error al iniciar reinicio: " + e.getMessage());
         }
 
         return ResponseEntity.ok(response);

@@ -30,6 +30,14 @@ cd "$PROJECT_DIR"
 mvn clean package -DskipTests -q
 echo "[OK] JAR compilado"
 
+# Detectar JAR compilado
+BUILT_JAR=$(ls "$TARGET_DIR"/oktask-*.jar 2>/dev/null | grep -v original | head -1)
+if [ -z "$BUILT_JAR" ]; then
+    echo "[ERROR] No se encontró JAR compilado"
+    exit 1
+fi
+echo "[OK] JAR: $(basename "$BUILT_JAR")"
+
 # Crear JAR plano preservando metadata de Spring Boot
 echo ""
 echo "[BUILD] Creando JAR plano para jpackage..."

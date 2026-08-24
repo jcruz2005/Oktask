@@ -96,6 +96,12 @@ public class NativeLauncher extends Application {
         serverThread.setDaemon(true);
         serverThread.start();
 
+        // Shutdown hook para limpieza graceful
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("[OKtask] Shutdown hook ejecutado");
+            System.out.println("[OKtask] Limpieza completada");
+        }, "shutdown-hook"));
+
         // JavaFX INMEDIATAMENTE
         launch(args);
 

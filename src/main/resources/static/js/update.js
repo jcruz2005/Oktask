@@ -412,6 +412,139 @@ class UpdateChecker {
     }
 
     /**
+     * Muestra toast de reinicio post-instalación.
+     * Si hay Pomodoro activo, pregunta "Reiniciar ahora" / "Más tarde".
+     * Si no, inicia el reinicio directo.
+     */
+    showRestartToast(installPath) {
+        const pomodoroActivo = this.isPomodoroActive();
+
+        if (pomodoroActivo) {
+            // Hay Pomodoro activo: preguntar
+            const toast = document.createElement('div');
+            toast.innerHTML = `
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="font-size:24px;">✅</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:600;font-size:14px;">Instalación completada</div>
+                        <div style="font-size:12px;opacity:0.9;margin-top:2px;">Tenés un Pomodoro activo. ¿Reiniciar ahora?</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:12px;">
+                    <button id="btn-restart-now" style="flex:1;padding:8px 16px;border:none;background:white;color:#059669;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;">
+                        Reiniciar Ahora
+                    </button>
+                    <button id="btn-restart-later" style="padding:8px 16px;border:1px solid rgba(255,255,255,0.3);background:transparent;color:white;border-radius:8px;cursor:pointer;font-size:13px;">
+                        Más Tarde
+                    </button>
+                </div>
+            `;
+            toast.style.cssText = `
+                position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#10B981,#059669);
+                color:white;border-radius:12px;box-shadow:0 8px 32px rgba(16,185,129,0.4);
+                z-index:10000;min-width:350px;padding:16px 20px;
+                animation:slideInRight 0.3s ease;
+            `;
+            document.body.appendChild(toast);
+
+            document.getElementById('btn-restart-now').addEventListener('click', () => {
+                toast.remove();
+                this.startRestart(installPath);
+            });
+            document.getElementById('btn-restart-later').addEventListener('click', () => {
+                toast.remove();
+                this.showToastMessage('Reiniciá manualmente cuando quieras', 'info');
+            });
+
+            setTimeout(() => toast.remove(), 15000);
+        } else {
+            // Sin Pomodoro: reiniciar directo
+            this.startRestart(installPath);
+        }
+    }
+
+    /**
+     * Verifica si hay una sesión de Pomodoro activa.
+     */
+    isPomodoroActive() {
+        try {
+            const estado = localStorage.getItem('pomodoro_estado');
+            if (!estado) return false;
+            const parsed = JSON.parse(estado);
+            return parsed && parsed.estado === 'ejecutando';
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Inicia el reinicio de la aplicación.
+     */
+    startRestart(installPath) {
+        // Mostrar toast de "Reiniciando..."
+        const toast = document.createElement('div');
+        let remaining = 5;
+        toast.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="font-size:24px;">🔄</div>
+                <div>
+                    <div style="font-weight:600;font-size:14px;">Reiniciando en <span id="restart-count">${remaining}</span>s</div>
+                    <div style="font-size:12px;opacity:0.9;margin-top:2px;">La nueva versión se activará en breve</div>
+                </div>
+            </div>
+        `;
+        toast.style.cssText = `
+            position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#7C3AED,#6D28D9);
+            color:white;border-radius:12px;box-shadow:0 8px 32px rgba(124,58,237,0.4);
+            z-index:10000;min-width:320px;padding:16px 20px;
+            animation:slideInRight 0.3s ease;
+        `;
+        document.body.appendChild(toast);
+
+        // Countdown
+        const interval = setInterval(() => {
+            remaining--;
+            const countEl = document.getElementById('restart-count');
+            if (countEl) countEl.textContent = remaining;
+            if (remaining <= 0) {
+                clearInterval(interval);
+                toast.remove();
+                this.executeRestart(installPath);
+            }
+        }, 1000);
+    }
+
+    /**
+     * Ejecuta el reinicio en el backend.
+     */
+    executeRestart(installPath) {
+        fetch('/api/update/restart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                installPath: installPath,
+                platform: this.platform
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // Mostrar mensaje final de "Reiniciando..."
+                this.showToastMessage('Reiniciando... esperá un momento', 'info');
+            } else {
+                this.showToastMessage(
+                    'Error al reiniciar: ' + (data.error || 'Desconocido') + '. Abrí OKtask manualmente.',
+                    'error'
+                );
+            }
+        })
+        .catch(err => {
+            console.error('Restart error:', err);
+            this.showToastMessage('Reiniciá manualmente la aplicación', 'info');
+        });
+    }
+
+    /**
      * Muestra barra de progreso de descarga
      */
     showDownloadProgress(message) {
@@ -478,10 +611,8 @@ class UpdateChecker {
                 .then(data => {
                     this.hideDownloadProgress();
                     if (data.success) {
-                        this.showToastMessage(
-                            `✅ Instalado en: ${data.installPath}\nReiniciá para usar la nueva versión.`,
-                            'success'
-                        );
+                        this.lastInstallPath = data.installPath;
+                        this.showRestartToast(data.installPath);
                     } else {
                         this.showToastMessage('Error: ' + (data.error || 'No se pudo instalar'), 'error');
                     }
