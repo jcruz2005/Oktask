@@ -245,30 +245,6 @@ chmod +x build-macos.sh
 Resultado en `target/installers/OKtask.app`
 
 > **Requisito extra para macOS:** `xcode-select --install`
-
----
-
-### Publicar una nueva versión
-
-```bash
-# 1. Actualizar la versión en estos archivos:
-#    - src/main/resources/static/js/update.js (mobile overrides)
-#    - version.json
-#    - src/main/java/com/academic/gestor/infrastructure/web/controllers/UpdateController.java
-#    - src/main/java/com/academic/gestor/NativeLauncher.java
-
-# 2. Subir el código
-git add -A
-git commit -m "feat: nueva función"
-git push
-
-# 3. Crear el tag (esto activa el build multiplataforma)
-git tag -a v1.3.0 -m "v1.3.0"
-git push origin v1.3.0
-```
-
-GitHub Actions buildea automáticamente para Linux, macOS y Android, y sube los instaladores a la Release.
-
 ---
 
 ## Base de datos
