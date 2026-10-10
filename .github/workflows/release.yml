@@ -9,7 +9,30 @@ permissions:
   contents: write
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Test
+        run: mvn -B test
+
   build-linux:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,6 +68,7 @@ jobs:
           path: target/OKtask-*-linux-x64.tar.gz
 
   build-windows:
+    needs: test
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -75,6 +99,7 @@ jobs:
           path: target/installers/OKtask-*.msi
 
   build-macos:
+    needs: test
     runs-on: macos-latest
     steps:
       - name: Checkout
