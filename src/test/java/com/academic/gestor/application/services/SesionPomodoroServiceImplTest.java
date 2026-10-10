@@ -8,6 +8,7 @@ import com.academic.gestor.domain.model.enums.TipoSesion;
 import com.academic.gestor.domain.model.valueobjects.DuracionMinutos;
 import com.academic.gestor.domain.ports.outbound.ConfiguracionPomodoroRepository;
 import com.academic.gestor.domain.ports.outbound.SesionPomodoroRepository;
+import com.academic.gestor.domain.ports.outbound.TareaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,6 +36,9 @@ class SesionPomodoroServiceImplTest {
 
     @Mock
     private ConfiguracionPomodoroRepository configuracionRepositoryMock;
+
+    @Mock
+    private TareaRepository tareaRepositoryMock;
 
     @InjectMocks
     private SesionPomodoroServiceImpl sut;
@@ -101,6 +105,7 @@ class SesionPomodoroServiceImplTest {
             // Arrange
             when(sesionRepositoryMock.findById(sesionId)).thenReturn(Optional.of(sesionEjemplo));
             when(sesionRepositoryMock.save(any(SesionPomodoro.class))).thenReturn(sesionEjemplo);
+            when(tareaRepositoryMock.findById(tareaId)).thenReturn(Optional.empty());
 
             // Act
             SesionPomodoro resultado = sut.finalizarSesion(sesionId);
@@ -109,6 +114,8 @@ class SesionPomodoroServiceImplTest {
             assertNotNull(resultado);
             verify(sesionRepositoryMock).findById(sesionId);
             verify(sesionRepositoryMock).save(any(SesionPomodoro.class));
+            verify(tareaRepositoryMock).findById(tareaId);
+            verify(tareaRepositoryMock, never()).save(any());
         }
 
         @Test
