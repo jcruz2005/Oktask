@@ -99,3 +99,12 @@ temp/
 *.swp
 *.swo
 *~
+
+# Capacitor / mobile (generated)
+mobile/node_modules/
+mobile/android/.gradle/
+mobile/android/.kotlin/
+mobile/android/**/build/
+mobile/ios/
+mobile/www/
+*.apk
