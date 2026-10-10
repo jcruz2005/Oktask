@@ -1,13 +1,16 @@
 package com.academic.gestor.infrastructure.config;
 
+import com.academic.gestor.domain.ports.inbound.AgendaService;
 import com.academic.gestor.domain.ports.inbound.EstadisticaService;
 import com.academic.gestor.domain.ports.inbound.MateriaService;
 import com.academic.gestor.domain.ports.inbound.SesionPomodoroService;
 import com.academic.gestor.domain.ports.inbound.TareaService;
+import com.academic.gestor.domain.ports.outbound.BloqueHorarioRepository;
 import com.academic.gestor.domain.ports.outbound.ConfiguracionPomodoroRepository;
 import com.academic.gestor.domain.ports.outbound.MateriaRepository;
 import com.academic.gestor.domain.ports.outbound.SesionPomodoroRepository;
 import com.academic.gestor.domain.ports.outbound.TareaRepository;
+import com.academic.gestor.application.services.AgendaServiceImpl;
 import com.academic.gestor.application.services.EstadisticaServiceImpl;
 import com.academic.gestor.application.services.MateriaServiceImpl;
 import com.academic.gestor.application.services.SesionPomodoroServiceImpl;
@@ -81,5 +84,18 @@ public class ServiceConfig {
             final TareaRepository tareaRepository,
             final SesionPomodoroRepository sesionRepository) {
         return new EstadisticaServiceImpl(materiaRepository, tareaRepository, sesionRepository);
+    }
+
+    /**
+     * Crea el bean del servicio de agenda semanal.
+     *
+     * @param bloqueRepository repositorio de bloques horarios
+     * @param materiaRepository repositorio de materias
+     * @return servicio de agenda
+     */
+    @Bean
+    public AgendaService agendaService(final BloqueHorarioRepository bloqueRepository,
+                                        final MateriaRepository materiaRepository) {
+        return new AgendaServiceImpl(bloqueRepository, materiaRepository);
     }
 }
